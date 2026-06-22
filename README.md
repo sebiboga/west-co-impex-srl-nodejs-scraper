@@ -1,33 +1,16 @@
-# job_seeker_ro_spider — EPAM Careers Romania Scraper
+# job_seeker_ro_spider — West Company Careers Scraper
 
-[![Oportunitati SI Cariere](https://github.com/sebiboga/epam-systems-international-srl-nodejs-scraper/actions/workflows/job-seeker-ro-spider.yml/badge.svg)](https://github.com/sebiboga/epam-systems-international-srl-nodejs-scraper/actions/workflows/job-seeker-ro-spider.yml)
-[![Automation Tests](https://github.com/sebiboga/epam-systems-international-srl-nodejs-scraper/actions/workflows/automation-testing.yml/badge.svg)](https://github.com/sebiboga/epam-systems-international-srl-nodejs-scraper/actions/workflows/automation-testing.yml)
+[![Oportunitati SI Cariere](https://github.com/sebiboga/west-co-impex-srl-nodejs-scraper/actions/workflows/job-seeker-ro-spider.yml/badge.svg)](https://github.com/sebiboga/west-co-impex-srl-nodejs-scraper/actions/workflows/job-seeker-ro-spider.yml)
 
-[![Version](https://img.shields.io/github/package-json/v/sebiboga/epam-systems-international-srl-nodejs-scraper?label=version&color=blue)](CHANGELOG.md)
-[![Test Results](https://img.shields.io/badge/test--results-HTML-9b59b6)](https://sebiboga.github.io/epam-systems-international-srl-nodejs-scraper/test-results/)
+[![Version](https://img.shields.io/github/package-json/v/sebiboga/west-co-impex-srl-nodejs-scraper?label=version&color=blue)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![JavaScript](https://img.shields.io/badge/javascript-ESM-F7DF1E?logo=javascript&logoColor=black)](https://ecma-international.org/)
 [![Node.js](https://img.shields.io/badge/node-24-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
-[![Website](https://img.shields.io/website?url=https%3A%2F%2Fpeviitor.ro&label=peviitor.ro)](https://peviitor.ro)
-[![API](https://img.shields.io/website?url=https%3A%2F%2Fapi.peviitor.ro%2F&label=api.peviitor.ro)](https://api.peviitor.ro/)
-[![SOLR](https://img.shields.io/website?url=https%3A%2F%2Fsolr.peviitor.ro%2Fsolr%2F&label=solr.peviitor.ro)](https://solr.peviitor.ro/solr/)
-[![GitHub Pages](https://img.shields.io/github/deployments/sebiboga/epam-systems-international-srl-nodejs-scraper/github-pages?label=GitHub%20Pages)](https://sebiboga.github.io/epam-systems-international-srl-nodejs-scraper/)
+[![GitHub Pages](https://img.shields.io/github/deployments/sebiboga/west-co-impex-srl-nodejs-scraper/github-pages?label=GitHub%20Pages)](https://sebiboga.github.io/west-co-impex-srl-nodejs-scraper/)
 
-**job_seeker_ro_spider** — un scraper pentru job-urile EPAM Systems din România. Extrage anunțurile de pe [EPAM Careers Romania](https://careers.epam.com/en/jobs/romania) și le publică în [peviitor.ro](https://peviitor.ro) prin API-ul SOLR.
+**job_seeker_ro_spider** — un scraper pentru job-urile West Company din România. Extrage anunțurile de pe [cariere.westcompany.ro](https://www.westcompany.ro/cariere/) și le publică în [peviitor.ro](https://peviitor.ro) prin API-ul SOLR.
 
-> **📐 Template repository.** Acest repo este **referința** pentru toate scraper-ele Node.js din ecosistemul peviitor.ro. Toate scraper-ele noi pentru alte companii din România ar trebui derivate din acest pattern. Vezi [CONTRIBUTING.md](CONTRIBUTING.md) pentru pașii de derivare.
->
-> **✅ Derivate validate:**
-> - [mejix-srl-nodejs-scraper](https://github.com/sebiboga/mejix-srl-nodejs-scraper) — MEJIX S.R.L. (HTML/cheerio, single-page)
-> - [talent-matchmakers-srl-nodejs-scraper](https://github.com/sebiboga/talent-matchmakers-srl-nodejs-scraper) — TALENT MATCHMAKERS S.R.L. (Teamtailor HTML/cheerio)
-> - [artsoft-consult-srl-nodejs-scraper](https://github.com/sebiboga/artsoft-consult-srl-nodejs-scraper) — ARTSOFT CONSULT SRL (HTML scraping/cheerio)
-> - [axon-soft-srl-nodejs-scraper](https://github.com/sebiboga/axon-soft-srl-nodejs-scraper) — AXON SOFT SRL (WordPress HTML/cheerio)
-> - [continental-hotels-srl-nodejs-scraper](https://github.com/sebiboga/continental-hotels-srl-nodejs-scraper) — CONTINENTAL HOTELS SA (POST AJAX → HTML/cheerio)
-> - [coera-bc-srl-nodejs-scraper](https://github.com/sebiboga/coera-bc-srl-nodejs-scraper) — COERA BC SRL (HTML/cheerio, single-page)
-> - [rapel-srl-nodejs-scraper](https://github.com/sebiboga/rapel-srl-nodejs-scraper) — RAPEL SRL (jobRapid.ro HTML/cheerio + ANOFM API)
-> - [ropardo-srl-nodejs-scraper](https://github.com/sebiboga/ropardo-srl-nodejs-scraper) — ROPARDO SRL (WordPress HTML/cheerio)
-> - [gaminvest-srl-nodejs-scraper](https://github.com/sebiboga/gaminvest-srl-nodejs-scraper) — GAMINVEST SRL (HTML/cheerio, single-page)
-> - [tec-software-solutions-srl-nodejs-scraper](https://github.com/sebiboga/tec-software-solutions-srl-nodejs-scraper) — TEC SOFTWARE SOLUTIONS SRL (BambooHR API)
+> **🌱 Derived scraper.** Acest repo a fost derivat din [epam-systems-international-srl-nodejs-scraper](https://github.com/sebiboga/epam-systems-international-srl-nodejs-scraper) (template-ul EPAM).
 > - [connatix-native-exchange-romania-srl-nodejs-scraper](https://github.com/sebiboga/connatix-native-exchange-romania-srl-nodejs-scraper) — CONNATIX NATIVE EXCHANGE ROMANIA SRL (Greenhouse API/JSON fetch)
 > - [cybertech-srl-nodejs-scraper](https://github.com/sebiboga/cybertech-srl-nodejs-scraper) — CYBERTECH SRL (ANOFM API)
 > - [principal33-srl-nodejs-scraper](https://github.com/sebiboga/principal33-srl-nodejs-scraper) — PRINCIPAL33 S.R.L. (Personio JSON API)

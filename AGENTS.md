@@ -1,10 +1,10 @@
 # AGENTS.md — Rules for AI agents
 
 ## Project
-EPAM scraper for peviitor.ro (Node.js, ESM, Jest)
+West Company scraper for peviitor.ro (Node.js, ESM, Jest)
 
-## 📐 This Repo Is a Template
-This repo is the **reference implementation** for all Node.js scrapers in the peviitor.ro ecosystem. Other scrapers are derived from it.
+## 🌱 This Repo Is a Derived Scraper
+This repo is a **derived scraper** created from the EPAM template for the peviitor.ro ecosystem.
 
 **🤖 If you've been asked to CREATE or RECREATE a derived scraper, read [AI-DERIVATION-GUIDE.md](AI-DERIVATION-GUIDE.md) first.** That file is the consolidated playbook covering every step + all known pitfalls from past derivations.
 
