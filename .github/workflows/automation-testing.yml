@@ -76,9 +76,9 @@ jobs:
 
           # Helper: query Solr, return numFound (or empty on failure)
           solr_count() {
-            local resp
-            resp=$(curl -s --user "${SOLR_AUTH}" "${SOLR_BASE}/select?q=id:${CIF}&rows=1&wt=json" 2>&1)
-            echo "$resp" | jq -r '.response.numFound // empty' 2>/dev/null || echo ""
+            curl -sS --fail --user "${SOLR_AUTH}" \
+              "${SOLR_BASE}/select?q=id:${CIF}&rows=1&wt=json" \
+              2>/dev/null | jq -r '.response.numFound // empty' 2>/dev/null || echo ""
           }
 
           EXISTING=$(solr_count)
@@ -103,11 +103,12 @@ jobs:
               '[{id:$id,company:$company,brand:$brand,status:"activ",location:[$loc],website:[$website],career:[$career],lastScraped:$today,scraperFile:$scraperFile}]' \
               > company_data.json
 
-            curl -s --user "${SOLR_AUTH}" \
+            curl -sS --fail --user "${SOLR_AUTH}" \
               "${SOLR_BASE}/update/json?commit=true" \
               -X POST \
               -H "Content-Type: application/json" \
-              --data-binary @company_data.json
+              --data-binary @company_data.json \
+              2>/dev/null && echo "✅ Company added" || echo "⚠️  Add failed (may already exist)"
           else
             echo "${BRAND} already exists in company core - no action needed"
           fi
