@@ -72,11 +72,15 @@ async function fetchJobsPage() {
 function normalizeLocation(loc) {
   const knownCities = {
     "crișeni": "Crișeni",
+    "criseni": "Crișeni",
     "sălaj": "Sălaj",
-    "zalău": "Zalău"
+    "salaj": "Sălaj",
+    "zalău": "Zalău",
+    "zalau": "Zalău"
   };
-  const lower = loc.trim().toLowerCase();
-  return knownCities[lower] || loc.trim();
+  const parts = loc.trim().split(",").map(p => p.trim());
+  const normalized = parts.map(p => knownCities[p.toLowerCase()] || p);
+  return normalized.join(", ");
 }
 
 function parseJobs(html) {
@@ -94,8 +98,8 @@ function parseJobs(html) {
 
     let location = [];
     if (sectionText.match(/Crișeni|Sălaj|Zalău/i)) {
-      const locMatch = sectionText.match(/(?:location|loc|locality|oraș|jud)\s*[:\s]+([^,\n]+)/i) ||
-                       sectionText.match(/([A-Z][a-zăâîșț]+(?:,\s*[A-Z][a-zăâîșț]+)?)/);
+      const locMatch = sectionText.match(/(?:location|loc|locality|oraș|jud|in)\s*[:\s]+([A-Z][a-zăâîșț]+(?:,\s*[A-Z][a-zăâîșț]+)?)/i) ||
+                       sectionText.match(/(Crișeni|Sălaj|Zalău)(?:,\s*[A-Z][a-zăâîșț]+)?/i);
       if (locMatch) {
         location = [normalizeLocation(locMatch[1])];
       } else {

@@ -30,17 +30,17 @@ describe('index.js Component Tests', () => {
 
     it('should keep company uppercase', () => {
       const payload = {
-        source: 'epam.com',
-        company: 'epam systems international srl',
-        cif: '33159615',
+        source: 'westcompany.ro',
+        company: 'west co impex srl',
+        cif: '4565806',
         jobs: [
-          { url: 'https://test.com/1', title: 'Job 1', company: 'epam systems', cif: '33159615' }
+          { url: 'https://test.com/1', title: 'Job 1', company: 'west co impex', cif: '4565806' }
         ]
       };
 
       const result = index.transformJobsForSOLR(payload);
 
-      expect(result.company).toBe('EPAM SYSTEMS INTERNATIONAL SRL');
+      expect(result.company).toBe('WEST CO IMPEX SRL');
     });
 
     it('should normalize workmode values', () => {
@@ -67,18 +67,81 @@ describe('index.js Component Tests', () => {
     });
   });
 
+  describe('parseJobs', () => {
+    it('should extract job titles from h2/h3 elements', () => {
+      const html = '<html><body><h2>Sofer Categoria C+E</h2><h3>Manager Depozit</h3></body></html>';
+      const result = index.parseJobs(html);
+      expect(result.jobs.length).toBe(2);
+      expect(result.jobs[0].title).toBe('Sofer Categoria C+E');
+      expect(result.jobs[1].title).toBe('Manager Depozit');
+    });
+
+    it('should skip titles shorter than 3 characters', () => {
+      const html = '<html><body><h2>AB</h2><h2>Valid Job</h2></body></html>';
+      const result = index.parseJobs(html);
+      expect(result.jobs.length).toBe(1);
+      expect(result.jobs[0].title).toBe('Valid Job');
+    });
+
+    it('should deduplicate job titles', () => {
+      const html = '<html><body><h2>Sofer Categoria C+E</h2><h2>Sofer Categoria C+E</h2></body></html>';
+      const result = index.parseJobs(html);
+      expect(result.jobs.length).toBe(1);
+    });
+
+    it('should detect Crișeni/Sălaj/Zalău location from context', () => {
+      const html = '<html><body><section><h2>Sofer</h2><p>Location: Zalău</p></section></body></html>';
+      const result = index.parseJobs(html);
+      expect(result.jobs.length).toBe(1);
+      expect(result.jobs[0].location).toEqual(['Zalău']);
+    });
+
+    it('should default to Crișeni, Sălaj when Crișeni mentioned in section', () => {
+      const html = '<html><body><section><h2>Lucrator Depozit</h2><p>Job in Crișeni, Salaj</p></section></body></html>';
+      const result = index.parseJobs(html);
+      expect(result.jobs.length).toBe(1);
+      expect(result.jobs[0].location).toEqual(['Crișeni, Sălaj']);
+    });
+
+    it('should set workmode on-site for Full Time jobs', () => {
+      const html = '<html><body><section><h2>Sofer</h2><p>Full Time</p></section></body></html>';
+      const result = index.parseJobs(html);
+      expect(result.jobs[0].workmode).toBe('on-site');
+    });
+
+    it('should generate job URL from title', () => {
+      const html = '<html><body><h2>Sofer Categoria C+E</h2></body></html>';
+      const result = index.parseJobs(html);
+      expect(result.jobs[0].url).toBe('https://www.westcompany.ro/cariere/#sofer-categoria-c-e');
+    });
+
+    it('should return empty array for no job content', () => {
+      const html = '<html><body><p>No jobs here</p></body></html>';
+      const result = index.parseJobs(html);
+      expect(result.jobs).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+
+    it('should return total count matching jobs length', () => {
+      const html = '<html><body><h2>Job A</h2><h2>Job B</h2><h2>Job C</h2></body></html>';
+      const result = index.parseJobs(html);
+      expect(result.total).toBe(3);
+      expect(result.total).toBe(result.jobs.length);
+    });
+  });
+
   describe('mapToJobModel', () => {
     it('should map raw job to job model format', () => {
       const rawJob = {
-        url: 'https://careers.epam.com/job/123',
+        url: 'https://www.westcompany.ro/cariere/#senior-developer',
         title: 'Senior Developer',
         location: ['Bucharest'],
         tags: ['Java', 'Spring'],
         workmode: 'hybrid'
       };
 
-      const COMPANY_NAME = 'EPAM SYSTEMS INTERNATIONAL SRL';
-      const COMPANY_CIF = '33159615';
+      const COMPANY_NAME = 'WEST CO IMPEX SRL';
+      const COMPANY_CIF = '4565806';
 
       const result = index.mapToJobModel(rawJob, COMPANY_CIF, COMPANY_NAME);
 
@@ -99,7 +162,7 @@ describe('index.js Component Tests', () => {
         title: 'Job 1'
       };
 
-      const result = index.mapToJobModel(rawJob, '33159615');
+      const result = index.mapToJobModel(rawJob, '4565806');
 
       expect(result.location).toBeUndefined();
       expect(result.tags).toBeUndefined();
@@ -109,7 +172,7 @@ describe('index.js Component Tests', () => {
     it('should handle missing title', () => {
       const rawJob = { url: 'https://test.com/1' };
 
-      const result = index.mapToJobModel(rawJob, '33159615');
+      const result = index.mapToJobModel(rawJob, '4565806');
 
       expect(result.title).toBeUndefined();
       expect(result.url).toBe('https://test.com/1');

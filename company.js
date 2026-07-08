@@ -1,7 +1,7 @@
 /**
  * Company Module - Company Validation and Data Management
  * 
- * PURPOSE: Handles company data validation from ANAF, caches company information,
+ * PURPOSE: Handles company data validation via cuifirma.ro (MCP), caches company information,
  * and validates companies against the Peviitor API. This module ensures the scraper
  * only processes legitimate, active companies registered in Romania.
  */
@@ -9,7 +9,7 @@
 import fetch from "node-fetch";
 import fs from "fs";
 import { querySOLR, deleteJobsByCIF } from "./solr.js";
-import { getCompanyFromANAF } from "./src/anaf.js";
+import { getCompanyFromANAF as getCompanyFromCuifirma } from "./src/anaf.js";
 import companyConfig from "./config/company.js";
 
 // ============================================================================
@@ -152,7 +152,7 @@ function saveCompanyData(anafData, peviitorData) {
   const companyData = {
     // Metadata
     validatedAt: new Date().toISOString(),
-    source: "ANAF",
+    source: "cuifirma.ro",
     brand: COMPANY_BRAND,
     
     // Raw data from sources
@@ -236,8 +236,8 @@ function loadCachedCompanyData() {
 /**
  * Gets company data, preferring cache over live API calls.
  * CIF and brand are read from config/company.json.
- * Cache order: tmp/company.json → company.json (root) → ANAF live.
- * Stale cache is used as fallback if ANAF is unreachable.
+ * Cache order: tmp/company.json → company.json (root) → cuifirma.ro live.
+ * Stale cache is used as fallback if cuifirma.ro is unreachable.
  * @returns {Promise<Object>} - Company data with company name, CIF, and active status
  */
 export async function getCompanyData() {
@@ -259,14 +259,14 @@ export async function getCompanyData() {
     return { company, cif, active, anafData };
   }
 
-  // Stale or missing cache → try ANAF, fall back to stale cache if ANAF fails
-  console.log(`Fetching fresh company data from ANAF for CIF: ${COMPANY_CIF}`);
+  // Stale or missing cache → try cuifirma.ro, fall back to stale cache if it fails
+  console.log(`Fetching fresh company data from cuifirma.ro for CIF: ${COMPANY_CIF}`);
   let anafData;
   try {
-    anafData = await getCompanyFromANAF(COMPANY_CIF);
+    anafData = await getCompanyFromCuifirma(COMPANY_CIF);
   } catch (err) {
     if (cachedData?._stale) {
-      console.log(`⚠️ ANAF unreachable (${err.message}) — falling back to stale cache`);
+      console.log(`⚠️ cuifirma.ro unreachable (${err.message}) — falling back to stale cache`);
       const a = cachedData.anaf;
       return {
         company: a.name.toUpperCase(),
@@ -279,15 +279,15 @@ export async function getCompanyData() {
   }
 
   if (!anafData) {
-    throw new Error("No data from ANAF - cannot proceed with scraping");
+    throw new Error("No data from cuifirma.ro - cannot proceed with scraping");
   }
   if (!anafData.name) {
-    throw new Error("ANAF returned no company name - cannot proceed with scraping");
+    throw new Error("cuifirma.ro returned no company name - cannot proceed with scraping");
   }
 
-  console.log(`ANAF returned name: ${anafData.name}`);
-  console.log(`ANAF returned CUI: ${anafData.cui}`);
-  console.log(`ANAF status: ${anafData.inactive ? "INACTIVE" : "ACTIVE"}`);
+  console.log(`cuifirma.ro returned name: ${anafData.name}`);
+  console.log(`cuifirma.ro returned CUI: ${anafData.cui}`);
+  console.log(`cuifirma.ro status: ${anafData.inactive ? "INACTIVE" : "ACTIVE"}`);
 
   const company = anafData.name.toUpperCase();
   const cif = anafData.cui.toString();
@@ -311,7 +311,7 @@ export async function getCompanyData() {
  * @returns {Promise<Object>} - Validation result with status and job count
  */
 export async function validateAndGetCompany() {
-  console.log("=== Step 1: Validate company via ANAF ===\n");
+  console.log("=== Step 1: Validate company via cuifirma.ro ===\n");
   
   // Get company data from ANAF (or cache)
   const { company, cif, active, anafData } = await getCompanyData();

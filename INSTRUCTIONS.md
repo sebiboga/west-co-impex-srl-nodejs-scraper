@@ -2,13 +2,14 @@
 
 ## Project Purpose
 
-This scraper extracts job listings from EPAM careers page (Romania only) and imports them to peviitor.ro.
+This scraper extracts job listings from West Company careers page (Romania only) and imports them to peviitor.ro.
 
-Target: https://careers.epam.com/en/jobs/romania
+Target: <https://www.westcompany.ro/cariere/>
 
 ## Model Schemas
 
 The job and company models are defined in:
+
 - `job-model.md` - Job model schema
 - `company-model.md` - Company model schema
 
@@ -21,7 +22,7 @@ These models are **dynamic** and can change over time. They are based on the off
 When working on this scraper:
 
 1. **Check for updates** in the Peviitor Core repository:
-   - Repository: https://github.com/peviitor-ro/peviitor_core
+   - Repository: <https://github.com/peviitor-ro/peviitor_core>
    - Main file: README.md (contains Job and Company model schemas)
 
 2. **When to update**:
@@ -43,14 +44,14 @@ When working on this scraper:
 
 ## Workflow Steps
 
-1. **Start with brand** - We know the brand (e.g., "EPAM")
-2. **Search in DemoANAF** - Find company by brand, get CIF from search results
-3. **Get company details from ANAF** - Using CIF, fetch full company data from ANAF
+1. **Start with brand** - We know the brand (e.g., "West Company")
+2. **Search in cuifirma.ro** - Find company by brand, get CIF from search results
+3. **Get company details from cuifirma.ro** - Using CIF, fetch full company data from cuifirma.ro
 4. **Validate with Peviitor** - Verify company exists in Peviitor, get group/brand info
 5. **Check existing jobs in SOLR** - Query SOLR by CIF to see what jobs already exist
-6. **Check company status** - If ANAF status = "inactive" → DELETE existing jobs from SOLR and STOP
-7. **Save company.json** - Save all ANAF + Peviitor data for backup
-8. **Scrape new jobs** - Extract jobs from EPAM careers page (Romania)
+6. **Check company status** - If company status = "inactive" → DELETE existing jobs from SOLR and STOP
+7. **Save company.json** - Save all company + Peviitor data for backup
+8. **Scrape new jobs** - Extract jobs from West Company careers page (Romania)
 9. **Transform for SOLR** - Validate and fix job data:
    - location: Only Romanian cities allowed
    - tags: lowercase, no diacritics
@@ -71,15 +72,15 @@ node index.js
 node index.js --test
 ```
 
-> **Important**: Scraper does NOT delete jobs from other sources (ANOFM, etc). It only upserts EPAM Careers jobs. Existing jobs are preserved.
+> **Important**: Scraper does NOT delete jobs from other sources (ANOFM, etc). It only upserts West Company jobs. Existing jobs are preserved.
 
 ## Full Workflow (automatic)
 
 When running `node index.js`, the following steps happen automatically:
 
 1. **Check existing jobs count** - Query SOLR by CIF (read-only)
-2. **Validate company via ANAF** - Check company exists and is active
-3. **Scrape jobs** - Extract jobs from EPAM careers API (Romania only)
+2. **Validate company via cuifirma.ro** - Check company exists and is active
+3. **Scrape jobs** - Extract jobs from West Company careers page (Romania only)
 4. **Transform for SOLR** - Fix locations (only Romanian cities), normalize fields
 5. **Upsert to SOLR** - Add/update jobs (SOLR handles duplicates by URL)
 6. **Show Summary** - Log job counts
@@ -100,13 +101,13 @@ querySOLR(CIF) - just count, don't delete
     ▼
 company.js (validate company)
     ├── load cache (tmp/company.json → company.json)
-    │   └── if fresh (<7 days), skip ANAF entirely
-    ├── ANAF API ──► get company name + CIF (only if cache stale/missing)
+    │   └── if fresh (<7 days), skip cuifirma.ro entirely
+    ├── cuifirma.ro MCP ──► get company name + CIF (only if cache stale/missing)
     ├── Peviitor API ──► validate company model
     └── SOLR ──► check existing jobs count
     │
     ▼ (if active)
-scrape EPAM API (jobs for Romania)
+scrape West Company careers page
     │
     ▼
 transformJobsForSOLR()
@@ -126,24 +127,24 @@ generateJobsMarkdown() → docs/jobs.md
 ## File Responsibilities
 
 | File | Role |
-|------|------|
+| ------ | ------ |
 | `config/company.json` | **Single source of truth** for company identity (CIF, brand, URLs, API params) |
 | `config/company.js` | ESM wrapper that loads `config/company.json` for Node code |
 | `index.js` | Main entry point - full workflow: validate company → scrape → transform → upsert → generate docs/jobs.md |
-| `company.js` | Validates company via ANAF + Peviitor; caches in root `company.json` (7-day TTL) and `tmp/company.json` |
+| `company.js` | Validates company via cuifirma.ro + Peviitor; caches in root `company.json` (7-day TTL) and `tmp/company.json` |
 | `solr.js` | SOLR operations module - query, delete, upsert jobs + standalone commands |
 | `validate-jobs.js` | Manual deep validator (content-aware); thin CLI wrapper over `src/job-validator.js` |
-| `src/anaf.js` | ANAF API core module - searchCompany(brand) and getCompanyFromANAF(cif) with 3-retry/2s-backoff |
+| `src/anaf.js` | cuifirma.ro MCP core module - searchCompany(brand) and getCompanyFromANAF(cif) with 3-retry/2s-backoff |
 | `src/markdown-generator.js` | Generates `docs/jobs.md` with company info and all scraped jobs |
 | `src/job-validator.js` | Shared validation primitives: `validateByHead`, `validateByContent`, `DEFAULT_EXPIRED_KEYWORDS` |
-| `demoanaf.js` | CLI entry point for ANAF module (thin wrapper around src/anaf.js) |
-| `tests/validate-epam-jobs.js` | CI fast validator (HEAD only); thin CLI over `src/job-validator.js` + `solr.js` |
-| `tests/unit/index.test.js` | Unit tests for parseApiJobs, mapToJobModel, transformJobsForSOLR |
+| `demoanaf.js` | CLI entry point for cuifirma.ro module (thin wrapper around src/anaf.js) |
+| `tests/validate-company-jobs.js` | CI fast validator (HEAD only); thin CLI over `src/job-validator.js` + `solr.js` |
+| `tests/unit/index.test.js` | Unit tests for parseJobs, mapToJobModel, transformJobsForSOLR |
 | `tests/unit/company.test.js` | Unit tests for validateAndGetCompany and fallback caching |
 | `tests/unit/solr.test.js` | Unit tests for SOLR query, upsert, delete operations |
-| `tests/unit/demoanaf.test.js` | Unit tests for ANAF search and company retrieval |
+| `tests/unit/demoanaf.test.js` | Unit tests for cuifirma.ro search and company retrieval |
 | `tests/integration/workflow.test.js` | Live integration tests - ANAF + SOLR |
-| `tests/e2e/scraper.test.js` | End-to-end tests with real EPAM API |
+| `tests/e2e/scraper.test.js` | End-to-end tests with real careers page |
 | `tests/consistency/public.test.js` | Verifies repo is public on GitHub |
 | `tests/consistency/repo.test.js` | Verifies branch, Pages, secrets, workflow files |
 | `tests/consistency/topics.test.js` | Verifies required repo topics |
@@ -151,8 +152,7 @@ generateJobsMarkdown() → docs/jobs.md
 
 ## API Endpoints
 
-- **DemoANAF Search**: `https://demoanaf.ro/api/search?q=BRAND` - Search companies by name/brand
-- **DemoANAF Company**: `https://demoanaf.ro/api/company/:cui` - Get company details by CIF
+- **cuifirma.ro MCP**: `https://cuifirma.ro/mcp/cuifirma` - Search firms and get firm profiles (JSON-RPC)
 - **Peviitor API**: `https://api.peviitor.ro/v1/company/`
 - **Solr**: `https://solr.peviitor.ro/solr/job` (auth: via `SOLR_AUTH` environment variable)
 
@@ -161,12 +161,12 @@ generateJobsMarkdown() → docs/jobs.md
 The scraper is intentionally slow to be a good citizen:
 
 | Setting | Value | Where |
-|---------|-------|-------|
+| --------- | ------- | ------- |
 | Delay between pages | 1000 ms | `index.js` — `sleep(1000)` in `scrapeAllListings()` |
 | Page size | 10 jobs | `index.js` — `PAGE_SIZE` constant |
 | Max pages | 10 | `index.js` — `MAX_PAGES` in `scrapeAllListings()` |
 | Request timeout | 10000 ms | `index.js` — `TIMEOUT` constant |
-| ANAF retries | 3 attempts, 2s exponential backoff | `src/anaf.js` |
+| cuifirma.ro retries | 3 attempts, 2s delay | `src/anaf.js` |
 | Concurrency | 1 (sequential) | No `Promise.all` for paginated fetches |
 | User-Agent | `job_seeker_ro_spider` | Identifies the scraper in server logs |
 
@@ -175,7 +175,7 @@ Derived scrapers should keep these defaults unless the target site explicitly pe
 ## Environment Variables
 
 | Variable | Description |
-|----------|-------------|
+| ---------- | ------------- |
 | `SOLR_AUTH` | SOLR credentials in format `user:password` |
 | `GITHUB_REPOSITORY` | Used by consistency tests — format: `owner/repo` |
 | `GITHUB_TOKEN` | GitHub API token for consistency tests |
@@ -194,10 +194,10 @@ node solr.js extract <CIF>
 # Query company in SOLR
 node solr.js company <search_term>
 
-# Get company details from ANAF by CIF
+# Get company details from cuifirma.ro by CIF
 node demoanaf.js <CIF>
 
-# Search companies in ANAF by brand
+# Search companies in cuifirma.ro by brand
 node demoanaf.js search <brand>
 
 # Validate job URLs from SOLR by CIF (check active/expired)
@@ -219,6 +219,7 @@ This project requires multiple levels of testing:
 3. **E2E Tests** - Test full workflow in `/tests/e2e` folder
 
 Run tests:
+
 ```bash
 npm test
 ```
@@ -233,4 +234,4 @@ All temporary/scratch files must be placed in `tmp/` inside the project root (ne
 - [x] Write Unit Tests for all modules (#3)
 - [x] Write Integration Tests in separate folder (#4)
 - [x] Write E2E automated tests in separate folder (#5)
-- [ ] Write Unit/Component/E2E tests for index.js
+- [x] Write Unit/Component/E2E tests for index.js

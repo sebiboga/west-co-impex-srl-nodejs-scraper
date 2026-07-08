@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * CLI entry point for the ANAF API module
+ * CLI entry point for company data lookup (cuifirma.ro MCP)
  * 
  * Usage:
  *   node demoanaf.js search <brand>    - Search for companies
@@ -33,7 +33,7 @@ if (args[0] === "search") {
     });
 } else {
   const cif = args[0] || companyConfig.cif;
-  console.log(`=== Testing ANAF API for CIF: ${cif} ===\n`);
+  console.log(`=== Testing cuifirma.ro for CIF: ${cif} ===\n`);
 
   getCompanyFromANAF(cif)
     .then(data => {

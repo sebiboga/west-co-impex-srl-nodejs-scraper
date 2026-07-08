@@ -22,7 +22,7 @@ Pentru fiecare workflow din `.github/workflows/`:
 | `job-seeker-ro-spider.yml` | `workflow_dispatch` | Rulează scraperul → jobs in SOLR + docs/jobs.md generat |
 | `automation-testing.yml` | `workflow_dispatch` | Toate testele + validare job-uri + company core |
 
-### Cum verifici:
+### Cum verifici
 
 1. Mergi pe GitHub → Actions → selectează workflow-ul
 2. Apasă **Run workflow** (pe `main`)
@@ -36,13 +36,15 @@ Pentru fiecare workflow din `.github/workflows/`:
 2. Apasă **Run workflow** → lasă `main`
 3. Așteaptă să se termine
 4. Verifică în SOLR că job-urile companiei apar:
+
    ```bash
    # CIF-ul companiei
    curl --user "${SOLR_AUTH}" "https://solr.peviitor.ro/solr/job/select?q=cif:CIF&rows=10"
    ```
+
 5. Verifică că `docs/jobs.md` a fost generat și este accesibil:
-   - https://sebiboga.github.io/epam-systems-international-srl-nodejs-scraper/jobs.md
-6. Verifică pe https://peviitor.ro că job-urile sunt vizibile
+   - <https://sebiboga.github.io/west-co-impex-srl-nodejs-scraper/jobs.md>
+6. Verifică pe <https://peviitor.ro> că job-urile sunt vizibile
 
 ## 4. Final
 

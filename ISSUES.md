@@ -1,12 +1,13 @@
 # Issues
 
-Acest proiect folosește [GitHub Issues](https://github.com/sebiboga/epam-systems-international-srl-nodejs-scraper/issues) pentru a urmări munca.
+Acest proiect folosește [GitHub Issues](https://github.com/sebiboga/west-co-impex-srl-nodejs-scraper/issues) pentru a urmări munca.
 
 ## Regulă
 
 **Orice modificare de cod trebuie să aibă un issue corespunzător în GitHub Issues.**
 
 Excepții:
+
 - Corecturi minore (typo-uri, whitespace, comentarii)
 - Changeset-uri care rezolvă un issue existent
 
@@ -19,4 +20,4 @@ Excepții:
 
 ## Issue-uri deschise
 
-Vezi [toate issue-urile](https://github.com/sebiboga/epam-systems-international-srl-nodejs-scraper/issues).
+Vezi [toate issue-urile](https://github.com/sebiboga/west-co-impex-srl-nodejs-scraper/issues).

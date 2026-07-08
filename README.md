@@ -10,21 +10,22 @@
 
 **job_seeker_ro_spider** — un scraper pentru job-urile West Company din România. Extrage anunțurile de pe [cariere.westcompany.ro](https://www.westcompany.ro/cariere/) și le publică în [peviitor.ro](https://peviitor.ro) prin API-ul SOLR.
 
-> **🌱 Derived scraper.** Acest repo a fost derivat din [epam-systems-international-srl-nodejs-scraper](https://github.com/sebiboga/epam-systems-international-srl-nodejs-scraper) (template-ul EPAM).
+> **🌱 Derived scraper.** Acest repo a fost derivat dintr-un template al ecosistemului peviitor.ro.
+>
 > - [connatix-native-exchange-romania-srl-nodejs-scraper](https://github.com/sebiboga/connatix-native-exchange-romania-srl-nodejs-scraper) — CONNATIX NATIVE EXCHANGE ROMANIA SRL (Greenhouse API/JSON fetch)
 > - [cybertech-srl-nodejs-scraper](https://github.com/sebiboga/cybertech-srl-nodejs-scraper) — CYBERTECH SRL (ANOFM API)
 > - [principal33-srl-nodejs-scraper](https://github.com/sebiboga/principal33-srl-nodejs-scraper) — PRINCIPAL33 S.R.L. (Personio JSON API)
 
 ## Overview
 
-Proiectul automatizează colectarea zilnică a job-urilor EPAM din România, menținând board-ul peviitor.ro la zi cu cele mai recente oportunități de carieră.
+Proiectul automatizează colectarea zilnică a job-urilor West Company din România, menținând board-ul peviitor.ro la zi cu cele mai recente oportunități de carieră.
 
 ## Features
 
-- Extrage job-uri din API-ul public EPAM Careers Romania
-- Validează compania via ANAF (CUI, status activ/inactiv, adresă completă)
-- **Cache ANAF la 7 zile** — committed în repo, nu lovește demoANAF la fiecare scrape
-- **Fallback la cache stale** dacă ANAF e indisponibil
+- Extrage job-uri din pagina de cariere West Company
+- Validează compania via cuifirma.ro (CUI, status activ/inactiv, adresă completă)
+- **Cache cuifirma.ro la 7 zile** — committed în repo, nu lovește cuifirma.ro la fiecare scrape
+- **Fallback la cache stale** dacă cuifirma.ro e indisponibil
 - Cross-validează cu Peviitor API
 - Stochează în SOLR (job core + company core)
 - Generează `docs/jobs.md` automat — accesibil pe GitHub Pages
@@ -37,7 +38,7 @@ Proiectul automatizează colectarea zilnică a job-urilor EPAM din România, men
 
 ```
 ├── index.js                    # Main scraper entry point
-├── company.js                  # Company validation via ANAF + Peviitor + SOLR
+├── company.js                  # Company validation via cuifirma.ro + Peviitor + SOLR
 ├── demoanaf.js                 # CLI wrapper for src/anaf.js
 ├── solr.js                     # SOLR operations (query, upsert, delete, company)
 ├── validate-jobs.js            # Job URL validator — checks active/expired, deletes stale jobs
@@ -45,23 +46,23 @@ Proiectul automatizează colectarea zilnică a job-urilor EPAM din România, men
 │   ├── company.json            # Single source of truth: CIF, brand, URLs, API params
 │   └── company.js              # ESM loader for company.json
 ├── src/
-│   ├── anaf.js                 # ANAF API core module (search + company details)
+│   ├── anaf.js                 # cuifirma.ro MCP core module (search + company details)
 │   ├── markdown-generator.js   # Generates docs/jobs.md from scraped data
 │   └── job-validator.js        # Shared validateByHead + validateByContent
-├── company.json                # ANAF data cache (committed, 7-day TTL)
+├── company.json                # cuifirma.ro data cache (committed, 7-day TTL)
 ├── tests/
 │   ├── package.json            # Jest config for test suite
-│   ├── company.json            # Mock ANAF data used in unit tests
-│   ├── validate-epam-jobs.js   # SOLR job URL validation script
+│   ├── company.json            # Mock company data used in unit tests
+│   ├── validate-west-company-jobs.js   # SOLR job URL validation script
 │   ├── unit/
 │   │   ├── index.test.js       # Tests for parseApiJobs, mapToJobModel, transformJobsForSOLR
 │   │   ├── company.test.js     # Tests for validateAndGetCompany, fallback caching
 │   │   ├── solr.test.js        # Tests for query, upsert, delete operations
-│   │   └── demoanaf.test.js    # Tests for ANAF search and company retrieval
+│   │   └── demoanaf.test.js    # Tests for cuifirma.ro search and company retrieval
 │   ├── integration/
-│   │   └── workflow.test.js    # Live ANAF + SOLR integration tests
+│   │   └── workflow.test.js    # Live cuifirma.ro + SOLR integration tests
 │   ├── e2e/
-│   │   └── scraper.test.js     # Full pipeline tests with real EPAM API
+│   │   └── scraper.test.js     # Full pipeline tests with real West Company careers page
 │   └── consistency/
 │       ├── public.test.js      # Verifies repo is public
 │       ├── repo.test.js        # Verifies branch, Pages, secrets, workflows
@@ -135,29 +136,31 @@ npm run test:e2e
 ### Daily Scraping
 
 The `job-seeker-ro-spider.yml` workflow runs daily at 6 AM UTC via GitHub Actions. It:
+
 1. Runs pre-scrape tests (unit + integration)
-2. Validates company data via ANAF
-3. Scrapes current job listings from EPAM Careers
+ 2. Validates company data via cuifirma.ro
+3. Scrapes current job listings from West Company careers page
 4. Updates Solr with new/removed jobs
 5. Runs post-scrape tests (e2e + consistency)
 6. Uploads test results and job data as artifacts
-7. Generates [`docs/jobs.md`](https://sebiboga.github.io/epam-systems-international-srl-nodejs-scraper/jobs.md) with company info and all scraped jobs
-8. Pushes test reports and `docs/jobs.md` to [`docs/`](https://sebiboga.github.io/epam-systems-international-srl-nodejs-scraper/)
+7. Generates [`docs/jobs.md`](https://sebiboga.github.io/west-co-impex-srl-nodejs-scraper/jobs.md) with company info and all scraped jobs
+8. Pushes test reports and `docs/jobs.md` to [`docs/`](https://sebiboga.github.io/west-co-impex-srl-nodejs-scraper/)
 
 ### Test Automation
 
 The `automation-testing.yml` workflow runs on every push and pull request. It:
-1. Ensures EPAM exists in the company core
+
+1. Ensures West Company exists in the company core
 2. Runs unit, integration, e2e, and consistency tests
 3. Validates data integrity in Solr
-4. Pushes test reports to [`docs/test-results/`](https://sebiboga.github.io/epam-systems-international-srl-nodejs-scraper/test-results/)
+4. Pushes test reports to [`docs/test-results/`](https://sebiboga.github.io/west-co-impex-srl-nodejs-scraper/test-results/)
 
 ## 🌱 Derived Scrapers
 
 Acest template a fost folosit cu succes pentru a deriva scraper-e pentru alte companii din ecosistemul peviitor.ro:
 
 | Repo | Companie | CIF | Metodă | Status |
-|------|----------|-----|--------|--------|
+| ------ | ---------- | ----- | -------- | -------- |
 | [mejix-srl-nodejs-scraper](https://github.com/sebiboga/mejix-srl-nodejs-scraper) | MEJIX SRL | 17372688 | HTML scraping (cheerio) | ✅ Live |
 | [talent-matchmakers-srl-nodejs-scraper](https://github.com/sebiboga/talent-matchmakers-srl-nodejs-scraper) | TALENT MATCHMAKERS S.R.L. | 38460545 | Teamtailor HTML (cheerio) | ✅ Live |
 | [artsoft-consult-srl-nodejs-scraper](https://github.com/sebiboga/artsoft-consult-srl-nodejs-scraper) | ARTSOFT CONSULT SRL | 15997630 | HTML scraping (cheerio) | ✅ Live |
@@ -174,6 +177,7 @@ Acest template a fost folosit cu succes pentru a deriva scraper-e pentru alte co
 | [qualitest-dc-ro-srl-nodejs-scraper](https://github.com/sebiboga/qualitest-dc-ro-srl-nodejs-scraper) | QUALITEST DC RO S.R.L. | 39814543 | Workable JSON API | ✅ Live |
 
 **Învățăminte din derivări:**
+
 - Doar un singur fișier de editat pentru identitate: `config/company.json` ✅
 - Logica de scraping în `index.js` poate fi complet diferită (API vs HTML/Teamtailor/jobRapid.ro/ANOFM) fără să afecteze restul pipeline-ului
 - Toate cele 4 niveluri de teste (unit, integration, e2e, consistency) și workflow-urile CI au funcționat pe toate derivatele fără ajustări structurale
@@ -201,14 +205,14 @@ This project is managed by [ASOCIATIA OPORTUNITATI SI CARIERE](https://oportunit
 
 ## Robots.txt Policy
 
-Acest scraper respectă regulile din [robots.txt](https://careers.epam.com/robots.txt) al EPAM Careers. Pentru analiza completă, vezi [ROBOTS.md](ROBOTS.md).
+Acest scraper respectă regulile din [robots.txt](https://www.westcompany.ro/robots.txt) al West Company. Pentru analiza completă, vezi [ROBOTS.md](ROBOTS.md).
 
 **Puncte cheie:**
-- API-ul `/api/*` este `Disallow` în robots.txt — scraper-ul îl folosește, dar cu rate limiting și un singur User-Agent identificabil (`job_seeker_ro_spider`)
-- Paginile individuale de job (`/*/vacancy/*`) sunt `Disallow` — scraper-ul NU le parsează, doar le verifică accesibilitatea via HEAD request
-- Endpoint-urile permise (`/`, `/en/jobs`) nu sunt scraper-uite
-- Comportament: 1 cerere/10 job-uri, delay 1s între pagini, fără concurență
+
+- `/wp-admin/` este `Disallow` în robots.txt — scraper-ul nu accesează această cale
+- Pagina de cariere `/cariere/` este permisă
+- Comportament: delay 1s, fără concurență, User-Agent identificabil (`job_seeker_ro_spider`)
 
 ## Disclaimer
 
-This scraper is designed for educational purposes and legitimate job data aggregation for the Romanian job market. Please respect EPAM's Terms of Service and robots.txt when using this scraper.
+This scraper is designed for educational purposes and legitimate job data aggregation for the Romanian job market. Please respect West Company's Terms of Service and robots.txt when using this scraper.

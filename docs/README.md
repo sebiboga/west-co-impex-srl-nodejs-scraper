@@ -1,8 +1,8 @@
 # job_seeker_ro_spider
 
-**job_seeker_ro_spider** — scraper pentru job-urile EPAM Systems din România.
+**job_seeker_ro_spider** — scraper pentru job-urile West Company (WEST CO IMPEX SRL) din România.
 
-Extrage anunțurile de pe [EPAM Careers Romania](https://careers.epam.com/en/jobs/romania) și le publică în [peviitor.ro](https://peviitor.ro) prin API-ul SOLR.
+Extrage anunțurile de pe [West Company Careers](https://www.westcompany.ro/cariere/) și le publică în [peviitor.ro](https://peviitor.ro) prin API-ul SOLR.
 
 ## Identificare
 
@@ -14,15 +14,15 @@ job_seeker_ro_spider
 
 ## Ce face
 
-1. **Validează compania** — interoghează API-ul public ANAF ([demoanaf.ro](https://demoanaf.ro)) după CIF-ul EPAM (33159615) și verifică:
-   - Denumirea oficială: EPAM SYSTEMS INTERNATIONAL SRL
+1. **Validează compania** — interoghează API-ul public cuifirma.ro după CIF-ul West Company (4565806) și verifică:
+   - Denumirea oficială: WEST CO IMPEX SRL
    - Status: activ/inactiv/radiat
    - Adresa completă din registrul comerțului
 2. **Cross-validează cu Peviitor** — verifică existența companiei în API-ul Peviitor
-3. **Scrape-uiește job-urile** — extrage lista completă de job-uri din API-ul public EPAM Careers, filtrat pe România
+3. **Scrape-uiește job-urile** — extrage lista completă de job-uri din pagina de cariere West Company
 4. **Transformă datele** — normalizează locațiile (doar orașe românești), tag-urile (lowercase), workmode-ul (remote/on-site/hybrid)
 5. **Stochează în SOLR** — upsert în `job` core (job-urile) și `company` core (datele companiei cu adresa completă)
-6. **Generează docs/jobs.md** — fișier markdown cu informații companie + toate job-urile curente, publicat pe [GitHub Pages](https://sebiboga.github.io/epam-systems-international-srl-nodejs-scraper/jobs.md)
+6. **Generează docs/jobs.md** — fișier markdown cu informații companie + toate job-urile curente, publicat pe [GitHub Pages](https://sebiboga.github.io/west-co-impex-srl-nodejs-scraper/jobs.md)
 
 ## Structură proiect
 
@@ -30,18 +30,18 @@ job_seeker_ro_spider
 ├── config/company.json         # Sursa unică de adevăr (CIF, brand, URL-uri, API)
 ├── config/company.js           # Loader ESM pentru config/company.json
 ├── index.js                    # Orchestrator principal
-├── company.js                  # Validare companie (ANAF + Peviitor + SOLR) cu cache 7 zile
+├── company.js                  # Validare companie (cuifirma.ro + Peviitor + SOLR) cu cache 7 zile
 ├── demoanaf.js                 # CLI wrapper pentru src/anaf.js
-├── src/anaf.js                 # Modul ANAF API (search + company details)
+├── src/anaf.js                 # Modul cuifirma.ro MCP (search + company details)
 ├── src/markdown-generator.js   # Generează docs/jobs.md după scrape
 ├── src/job-validator.js        # Primitivă comună: validateByHead, validateByContent
 ├── solr.js                     # Operații SOLR (query, upsert, delete, company)
-├── company.json                # Cache ANAF (committed, TTL 7 zile, fallback la stale)
+├── company.json                # Cache cuifirma.ro (committed, TTL 7 zile, fallback la stale)
 ├── ROBOTS.md          # Analiză robots.txt și politici de scraping
 ├── tests/
-│   ├── unit/          # 56 teste unitare (API-uri mock-uite)
-│   ├── integration/   # 16 teste de integrare (ANAF + SOLR live)
-│   └── e2e/           # 13 teste end-to-end (pipelin complet)
+│   ├── unit/          # Teste unitare (API-uri mock-uite)
+│   ├── integration/   # Teste de integrare (ANAF + SOLR live)
+│   └── e2e/           # Teste end-to-end (pipelin complet)
 └── .github/workflows/
     ├── job-seeker-ro-spider.yml     # Rulează zilnic la 6 AM UTC
     └── automation-testing.yml       # Teste automate la fiecare push/PR
@@ -50,38 +50,34 @@ job_seeker_ro_spider
 ## API-uri folosite
 
 | API | URL | Autentificare |
-|---|---|---|
-| EPAM Careers | `https://careers.epam.com/api/jobs/v2/search/...` | Public |
-| ANAF (demoanaf) | `https://demoanaf.ro/api/...` | Public |
+| --- | --- | --- |
+| West Company Careers | `https://www.westcompany.ro/cariere/` | Public |
+| cuifirma.ro MCP | `https://cuifirma.ro/mcp/cuifirma` | Public (30 req/min/IP) |
 | Peviitor | `https://api.peviitor.ro/v1/company/` | Public |
 | SOLR (job core) | `https://solr.peviitor.ro/solr/job` | `SOLR_AUTH` |
 | SOLR (company core) | `https://solr.peviitor.ro/solr/company` | `SOLR_AUTH` |
 
 ## Robots.txt
 
-EPAM Careers [robots.txt](https://careers.epam.com/robots.txt) dezactivează:
-- `/api/*` — API-ul JSON folosit de scraper
-- `/*/vacancy/*` — paginile individuale de job
+West Company [robots.txt](https://www.westcompany.ro/robots.txt) dezactivează:
 
-Scraper-ul folosește API-ul cu rate limiting (1s delay între pagini, 10 job-uri/cerere) și un singur User-Agent identificabil. Paginile individuale de job sunt doar verificate (HEAD request), nu parse-uite.
+- `/wp-admin/` — zona administrativă WordPress
+
+Scraper-ul folosește rate limiting (1s delay, fără concurență) și un singur User-Agent identificabil.
 
 Pentru analiza completă, vezi [ROBOTS.md](../ROBOTS.md).
 
 ## 🌱 Derived Scrapers
 
-Acest template a fost folosit pentru a deriva scraper-e pentru alte companii:
+Acest scraper este derivat dintr-un template al ecosistemului peviitor.ro.
+
+Derived scrapers care folosesc același template:
 
 | Repo | Companie | CIF | Metodă | Status |
-|------|----------|-----|--------|--------|
+| ------ | ---------- | ----- | -------- | -------- |
 | [mejix-srl-nodejs-scraper](https://github.com/sebiboga/mejix-srl-nodejs-scraper) | MEJIX SRL | 17372688 | HTML scraping (cheerio) | ✅ Live |
 | [talent-matchmakers-srl-nodejs-scraper](https://github.com/sebiboga/talent-matchmakers-srl-nodejs-scraper) | TALENT MATCHMAKERS S.R.L. | 38460545 | Teamtailor HTML (cheerio) | ✅ Live |
-| [artsoft-consult-srl-nodejs-scraper](https://github.com/sebiboga/artsoft-consult-srl-nodejs-scraper) | ARTSOFT CONSULT SRL | 15997630 | HTML scraping (cheerio) | ✅ Live |
-| [rapel-srl-nodejs-scraper](https://github.com/sebiboga/rapel-srl-nodejs-scraper) | RAPEL SRL | 5665609 | jobRapid.ro HTML + ANOFM API | ✅ Live |
-| [continental-hotels-srl-nodejs-scraper](https://github.com/sebiboga/continental-hotels-srl-nodejs-scraper) | CONTINENTAL HOTELS SA | 1559737 | POST AJAX → HTML (cheerio) | ✅ Live |
-| [coera-bc-srl-nodejs-scraper](https://github.com/sebiboga/coera-bc-srl-nodejs-scraper) | COERA BC SRL | 32519996 | HTML scraping (cheerio) | ✅ Live |
-| [stefanini-romania-srl-nodejs-scraper](https://github.com/sebiboga/stefanini-romania-srl-nodejs-scraper) | STEFANINI ROMANIA SRL | 16139707 | SmartSearchOnline HTML (cheerio) | ✅ Live |
-| [metro-cash-carry-romania-srl-nodejs-scraper](https://github.com/sebiboga/metro-cash-carry-romania-srl-nodejs-scraper) | METRO CASH & CARRY ROMANIA SRL | 8119423 | HTML/cheerio | ✅ Live |
-| [qualitest-dc-ro-srl-nodejs-scraper](https://github.com/sebiboga/qualitest-dc-ro-srl-nodejs-scraper) | QUALITEST DC RO S.R.L. | 39814543 | Workable JSON API | ✅ Live |
+| [principal33-srl-nodejs-scraper](https://github.com/sebiboga/principal33-srl-nodejs-scraper) | PRINCIPAL33 S.R.L. (Personio JSON API) | 35442109 | Personio JSON API | ✅ Live |
 
 **Pitfall #12 — ANOFM job scraping by CIF:** API-ul public ANOFM (`/api/entity/vw_public_job_posting`) oferă job-uri gratis filtrate pe CIF. Adăugați `searchANOFM(cif)` în scraper pentru a nu pierde job-uri de pe această platformă. Location se returnează ca array (`[loc]`).
 
@@ -97,7 +93,7 @@ npm run test:unit
 # Doar integrare (necesită ANAF live, SOLR conditional)
 npm run test:integration
 
-# Doar E2E (API real EPAM + ANAF + SOLR)
+# Doar E2E (API real West Company + ANAF + SOLR)
 npm run test:e2e
 ```
 

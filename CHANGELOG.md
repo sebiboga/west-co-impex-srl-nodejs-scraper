@@ -4,7 +4,7 @@
 
 Initial derived scraper for West Company (WEST CO IMPEX SRL).
 
-- Forked from EPAM template
-- Replaced EPAM API scraper with WordPress/Elementor HTML scraper (cheerio)
+- Forked from template
+- Replaced original API scraper with WordPress/Elementor HTML scraper (cheerio)
 - Configured for CIF 4565806
 - ANOFM API integration included

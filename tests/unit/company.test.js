@@ -28,10 +28,17 @@ function clearAllCaches() {
   }
 }
 
-function anafCompanyResponse(data) {
+function mcpProfileResponse(profileData) {
   return {
     ok: true,
-    json: async () => ({ data, success: true })
+    json: async () => ({
+      jsonrpc: '2.0',
+      id: '1',
+      result: {
+        content: [{ type: 'text', text: JSON.stringify(profileData) }],
+        isError: false
+      }
+    })
   };
 }
 
@@ -49,15 +56,30 @@ function solrResponse(numFound, docs) {
   };
 }
 
-const EPAM_ANAF_RECORD = {
-  cui: 33159615,
-  name: 'EPAM SYSTEMS INTERNATIONAL SRL',
-  address: 'IANCU DE HUNEDOARA, 48, Bucureşti Sectorul 1, Bucureşti',
-  caenCode: '6220',
-  inactive: false,
-  vatRegistered: true,
-  eFacturaRegistered: false,
-  headquartersAddress: { locality: 'Bucureşti Sectorul 1' }
+const WEST_CO_PROFILE = {
+  cui: "4565806",
+  name: "WEST CO IMPEX SRL",
+  display_name: "WEST CO IMPEX SRL",
+  location: "Sat Crişeni, Comuna Crişeni, Sălaj",
+  status_label: "Activă",
+  is_active: true,
+  primary_caen_display: "2224 — Fabricarea articolelor din material plastic pentru construcții",
+  sections: [
+    {
+      key: "identificare_juridica",
+      fields: [
+        { label: "CUI/CIF", value: "4565806" },
+        { label: "Număr registru", value: "J1993000598312" },
+        { label: "Adresă", value: "Nr. 1, Cod poștal 4748" }
+      ]
+    },
+    {
+      key: "rezumat_fiscal",
+      fields: [
+        { label: "Status TVA", value: "Plătitor TVA" }
+      ]
+    }
+  ]
 };
 
 describe('company.js', () => {
@@ -83,38 +105,39 @@ describe('company.js', () => {
   });
 
   describe('getCompanyData (no cache)', () => {
-    it('should fetch EPAM via direct CIF lookup and return company data', async () => {
-      mockFetch.mockResolvedValueOnce(anafCompanyResponse(EPAM_ANAF_RECORD));
+    it('should fetch West Company via CIF lookup and return company data', async () => {
+      mockFetch.mockResolvedValueOnce(mcpProfileResponse(WEST_CO_PROFILE));
 
       const result = await company.getCompanyData();
 
-      expect(result).toHaveProperty('company', 'EPAM SYSTEMS INTERNATIONAL SRL');
-      expect(result).toHaveProperty('cif', '33159615');
+      expect(result).toHaveProperty('company', 'WEST CO IMPEX SRL');
+      expect(result).toHaveProperty('cif', '4565806');
       expect(result).toHaveProperty('active', true);
       expect(result).toHaveProperty('anafData');
-      expect(result.anafData.name).toBe('EPAM SYSTEMS INTERNATIONAL SRL');
+      expect(result.anafData.name).toBe('WEST CO IMPEX SRL');
     });
 
-    it('should throw when ANAF returns no data', async () => {
-      mockFetch.mockResolvedValueOnce(anafCompanyResponse(null));
+    it('should throw when company data has no name', async () => {
+      const noNameProfile = { ...WEST_CO_PROFILE, name: null };
+      mockFetch.mockResolvedValueOnce(mcpProfileResponse(noNameProfile));
 
-      await expect(company.getCompanyData()).rejects.toThrow('No data from ANAF');
-    });
-
-    it('should throw when ANAF returns no company name', async () => {
-      mockFetch.mockResolvedValueOnce(anafCompanyResponse({ cui: 33159615, name: null }));
-
-      await expect(company.getCompanyData()).rejects.toThrow('ANAF returned no company name');
+      await expect(company.getCompanyData()).rejects.toThrow('cuifirma.ro returned no company name');
     });
   });
 
   describe('getCompanyData (with cache)', () => {
     const cachedData = {
       validatedAt: new Date().toISOString(),
-      anaf: EPAM_ANAF_RECORD,
+      source: "cuifirma.ro",
+      anaf: {
+        name: 'WEST CO IMPEX SRL',
+        cui: '4565806',
+        address: 'Sat Crişeni, Comuna Crişeni, Sălaj',
+        inactive: false
+      },
       summary: {
-        company: 'EPAM SYSTEMS INTERNATIONAL SRL',
-        cif: '33159615',
+        company: 'WEST CO IMPEX SRL',
+        cif: '4565806',
         active: true
       }
     };
@@ -126,8 +149,8 @@ describe('company.js', () => {
     it('should use cached company data when available', async () => {
       const result = await company.getCompanyData();
 
-      expect(result.company).toBe('EPAM SYSTEMS INTERNATIONAL SRL');
-      expect(result.cif).toBe('33159615');
+      expect(result.company).toBe('WEST CO IMPEX SRL');
+      expect(result.cif).toBe('4565806');
       expect(result.active).toBe(true);
       expect(mockFetch).not.toHaveBeenCalled();
     });
@@ -140,35 +163,20 @@ describe('company.js', () => {
 
     it('should return company data with status active', async () => {
       mockFetch
-        .mockResolvedValueOnce(anafCompanyResponse(EPAM_ANAF_RECORD))
+        .mockResolvedValueOnce(mcpProfileResponse(WEST_CO_PROFILE))
         .mockResolvedValueOnce(solrResponse(5, [
           { url: 'https://test.com/1', title: 'Job 1' },
           { url: 'https://test.com/2', title: 'Job 2' }
         ]))
-        .mockResolvedValueOnce(peviitorResponse([{ company: 'EPAM SYSTEMS INTERNATIONAL SRL' }]));
+        .mockResolvedValueOnce(peviitorResponse([{ company: 'WEST CO IMPEX SRL' }]));
 
       const result = await company.validateAndGetCompany();
 
       expect(result).toHaveProperty('status', 'active');
-      expect(result).toHaveProperty('company', 'EPAM SYSTEMS INTERNATIONAL SRL');
-      expect(result).toHaveProperty('cif', '33159615');
+      expect(result).toHaveProperty('company', 'WEST CO IMPEX SRL');
+      expect(result).toHaveProperty('cif', '4565806');
       expect(result).toHaveProperty('existingJobsCount');
       expect(typeof result.existingJobsCount).toBe('number');
     });
-
-    // Epam e activă — testul inactive se rulează doar dacă firma e inactivă
-    if (EPAM_ANAF_RECORD.inactive) {
-      it('should return inactive status when company is inactive', async () => {
-        const inactiveRecord = { ...EPAM_ANAF_RECORD, inactive: true };
-
-        mockFetch
-          .mockResolvedValueOnce(anafCompanyResponse(inactiveRecord))
-          .mockResolvedValueOnce(solrResponse(0, []));
-
-        const result = await company.validateAndGetCompany();
-
-        expect(result).toHaveProperty('status', 'inactive');
-      });
-    }
   });
 });
