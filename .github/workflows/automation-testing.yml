@@ -58,13 +58,11 @@ jobs:
           SOLR_AUTH: ${{ secrets.SOLR_AUTH }}
         run: |
           if [ -z "$SOLR_AUTH" ]; then
-            echo "❌ SOLR_AUTH secret is not set — skipping company core check"
+            echo "❌ SOLR_AUTH secret is not set"
             exit 1
           fi
 
           SOLR_BASE="https://solr.peviitor.ro/solr/company"
-
-          # Load company identity from single source of truth
           CIF=$(jq -r '.cif' config/company.json)
           LEGAL_NAME=$(jq -r '.legalName' config/company.json)
           BRAND=$(jq -r '.brand' config/company.json)
@@ -74,22 +72,23 @@ jobs:
           SCRAPER_FILE=$(jq -r '.scraperFile' config/company.json)
           TODAY=$(date -u +%Y-%m-%d)
 
-          # Helper: query Solr, return numFound (or empty on failure)
-          solr_count() {
-            curl -sS --fail --user "${SOLR_AUTH}" \
-              "${SOLR_BASE}/select?q=id:${CIF}&rows=1&wt=json" \
-              2>/dev/null | jq -r '.response.numFound // empty' 2>/dev/null || echo ""
-          }
+          echo "Checking if ${BRAND} (CIF: ${CIF}) exists in company core..."
 
-          EXISTING=$(solr_count)
-          echo "${BRAND} count in company core: ${EXISTING:-"(empty/unreachable)"}"
+          # Query Solr, save raw response for debugging
+          curl -sS --user "${SOLR_AUTH}" \
+            "${SOLR_BASE}/select?q=id:${CIF}&rows=1&wt=json" \
+            > solr_response.json 2>&1
 
-          if [ -z "$EXISTING" ] || [ "$EXISTING" -eq "0" ] 2>/dev/null; then
-            if [ -z "$EXISTING" ]; then
-              echo "⚠️  Could not query Solr — trying to add company directly..."
-            else
-              echo "${BRAND} not found - adding to company core..."
-            fi
+          echo "Raw Solr response:"
+          head -c 500 solr_response.json
+
+          # Parse numFound (0 if response is invalid)
+          EXISTING=$(jq -r '.response.numFound // "0"' solr_response.json 2>/dev/null || echo "0")
+          echo ""
+          echo "${BRAND} count in company core: $EXISTING"
+
+          if [ "$EXISTING" -eq "0" ]; then
+            echo "${BRAND} not found — adding to company core..."
 
             jq -n \
               --arg id "$CIF" \
@@ -103,14 +102,33 @@ jobs:
               '[{id:$id,company:$company,brand:$brand,status:"activ",location:[$loc],website:[$website],career:[$career],lastScraped:$today,scraperFile:$scraperFile}]' \
               > company_data.json
 
-            curl -sS --fail --user "${SOLR_AUTH}" \
+            echo "Sending upsert..."
+            curl -sS --user "${SOLR_AUTH}" \
               "${SOLR_BASE}/update/json?commit=true" \
               -X POST \
               -H "Content-Type: application/json" \
               --data-binary @company_data.json \
-              2>/dev/null && echo "✅ Company added" || echo "⚠️  Add failed (may already exist)"
+              2>&1 | head -c 500
+            echo ""
           else
-            echo "${BRAND} already exists in company core - no action needed"
+            echo "${BRAND} already exists in company core — no action needed"
+          fi
+
+          # Final verification
+          curl -sS --user "${SOLR_AUTH}" \
+            "${SOLR_BASE}/select?q=id:${CIF}&rows=1&wt=json" \
+            > solr_verify.json 2>&1
+
+          FINAL=$(jq -r '.response.numFound // "0"' solr_verify.json 2>/dev/null || echo "0")
+          echo "${BRAND} count after: $FINAL"
+
+          if [ "$FINAL" -ge "1" ] 2>/dev/null; then
+            echo "✅ SUCCESS: ${BRAND} is in company core"
+          else
+            echo "❌ FAILED: ${BRAND} still not in company core"
+            echo "Verification response:"
+            head -c 500 solr_verify.json
+            exit 1
           fi
 
           FINAL=$(solr_count)
