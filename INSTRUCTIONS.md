@@ -143,7 +143,7 @@ generateJobsMarkdown() → docs/jobs.md
 | `tests/unit/company.test.js` | Unit tests for validateAndGetCompany and fallback caching |
 | `tests/unit/solr.test.js` | Unit tests for SOLR query, upsert, delete operations |
 | `tests/unit/demoanaf.test.js` | Unit tests for cuifirma.ro search and company retrieval |
-| `tests/integration/workflow.test.js` | Live integration tests - ANAF + SOLR |
+| `tests/integration/workflow.test.js` | Live integration tests - cuifirma.ro + SOLR |
 | `tests/e2e/scraper.test.js` | End-to-end tests with real careers page |
 | `tests/consistency/public.test.js` | Verifies repo is public on GitHub |
 | `tests/consistency/repo.test.js` | Verifies branch, Pages, secrets, workflow files |
@@ -215,7 +215,7 @@ node validate-jobs.js <CIF> --delete
 This project requires multiple levels of testing:
 
 1. **Unit Tests** - Test individual modules (solr.js, company.js) in isolation
-2. **Integration Tests** - Test API interactions (ANAF, Peviitor, SOLR) in `/tests/integration` folder
+2. **Integration Tests** - Test API interactions (cuifirma.ro, Peviitor, SOLR) in `/tests/integration` folder
 3. **E2E Tests** - Test full workflow in `/tests/e2e` folder
 
 Run tests:

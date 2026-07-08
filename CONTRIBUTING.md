@@ -42,7 +42,7 @@ All scraper code, CI workflows, and the static HTML read from this file. You sho
 
 | File | What to change |
 | ------ | --------------- |
-| `tests/company.json` | Replace with ANAF mock for the new company |
+| `tests/company.json` | Replace with company mock for the new company |
 | `UPDATE-REPO-ABOUT.md` | New description with legal name and CIF |
 | `package.json` | `name` field |
 | `README.md` | Title, badges (URLs to the new repo), Overview |
@@ -55,11 +55,11 @@ When you replace the scraper's parser function in `index.js` (e.g. `parseApiJobs
 - Replace the parser test block with tests for the new function
 - Update test data fixtures to match the new source format (e.g. HTML fragments instead of JSON API)
 - Update URL generation tests — the URL construction logic changes per data source
-- Also update `tests/unit/company.test.js`: replace the company's ANAF record constant and all hardcoded CIF / legal name values with the new company's CIF and legal name
+- Also update `tests/unit/company.test.js`: replace the company's record constant and all hardcoded CIF / legal name values with the new company's CIF and legal name
 - Also update `tests/unit/solr.test.js`: replace all hardcoded CIF, legal name, and brand in mock data with the new company's CIF, legal name, and brand (tests still pass with stale values since mocks are self-referential, but the hardcoded old references are misleading)
 - **Also update `tests/integration/workflow.test.js`** and **`tests/e2e/scraper.test.js`**: replace the CIF constant with the new CIF, update all hardcoded company name and brand assertions, and replace the old API URLs/parsing with the new data source's URL and parser function name
 
-Failing to update these tests will break CI immediately — the unit test step gates all downstream pipeline steps, and integration/E2E tests run next (if they query real SOLR/ANAF data instead of mocks).
+Failing to update these tests will break CI immediately — the unit test step gates all downstream pipeline steps, and integration/E2E tests run next (if they query real cuifirma.ro/SOLR data instead of mocks).
 
 ### 3. Adjust the scraper to the new data source
 

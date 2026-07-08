@@ -40,7 +40,7 @@ job_seeker_ro_spider
 ├── ROBOTS.md          # Analiză robots.txt și politici de scraping
 ├── tests/
 │   ├── unit/          # Teste unitare (API-uri mock-uite)
-│   ├── integration/   # Teste de integrare (ANAF + SOLR live)
+│   ├── integration/   # Teste de integrare (cuifirma.ro + SOLR live)
 │   └── e2e/           # Teste end-to-end (pipelin complet)
 └── .github/workflows/
     ├── job-seeker-ro-spider.yml     # Rulează zilnic la 6 AM UTC
@@ -90,10 +90,10 @@ npm test
 # Doar unitare
 npm run test:unit
 
-# Doar integrare (necesită ANAF live, SOLR conditional)
+# Doar integrare (necesită cuifirma.ro live, SOLR conditional)
 npm run test:integration
 
-# Doar E2E (API real West Company + ANAF + SOLR)
+# Doar E2E (API real West Company + cuifirma.ro + SOLR)
 npm run test:e2e
 ```
 

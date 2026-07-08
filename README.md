@@ -181,7 +181,7 @@ Acest template a fost folosit cu succes pentru a deriva scraper-e pentru alte co
 - Doar un singur fișier de editat pentru identitate: `config/company.json` ✅
 - Logica de scraping în `index.js` poate fi complet diferită (API vs HTML/Teamtailor/jobRapid.ro/ANOFM) fără să afecteze restul pipeline-ului
 - Toate cele 4 niveluri de teste (unit, integration, e2e, consistency) și workflow-urile CI au funcționat pe toate derivatele fără ajustări structurale
-- **Pitfall #1 — ANAF brand search:** Căutarea ANAF după brand poate returna firme omonime diferite înaintea celei căutate. Testele trebuie să interogheze direct pe CIF, nu după nume.
+- **Pitfall #1 — Company brand search:** Căutarea după brand poate returna firme omonime diferite înaintea celei căutate. Testele trebuie să interogheze direct pe CIF, nu după nume.
 - **Pitfall #2 — Version conflict la re-upsert:** Joburile citite din SOLR păstrează `_version_`; după delete-by-CIF, re-insertul eșuează cu 409. Se șterge `_version_` din obiecte înainte de upsert.
 - **Pitfall #12 — ANOFM job scraping by CIF:** API-ul public ANOFM (`/api/entity/vw_public_job_posting`) oferă job-uri gratis filtrate pe CIF. Adăugați `searchANOFM(cif)` în scraper pentru a nu pierde job-uri de pe această platformă. Location se returnează ca array (`[loc]`).
 
