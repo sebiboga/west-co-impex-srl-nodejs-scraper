@@ -10,11 +10,11 @@
 | Location | Sat Crişeni, Comuna Crişeni, Sălaj |
 | Website | [https://www.westcompany.ro](https://www.westcompany.ro) |
 | Careers | [https://www.westcompany.ro/cariere/](https://www.westcompany.ro/cariere/) |
-| Last Scraped | 2026-07-11 |
+| Last Scraped | 2026-07-12 |
 
 ## Current Job Listings (7)
 
-_Generated: 2026-07-11T07:39:43.808Z_
+_Generated: 2026-07-12T07:58:42.075Z_
 
 ### Montator pentru Lucrări din Sticlă
 
