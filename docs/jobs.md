@@ -10,54 +10,44 @@
 | Location | Sat Crişeni, Comuna Crişeni, Sălaj |
 | Website | [https://www.westcompany.ro](https://www.westcompany.ro) |
 | Careers | [https://www.westcompany.ro/cariere/](https://www.westcompany.ro/cariere/) |
-| Last Scraped | 2026-07-21 |
+| Last Scraped | 2026-07-24 |
 
-## Current Job Listings (7)
+## Current Job Listings (6)
 
-_Generated: 2026-07-21T08:07:14.259Z_
+_Generated: 2026-07-24T08:06:26.175Z_
 
-### Montator pentru Lucrări din Sticlă
+### CONSTRUIEȘTE VIITORUL LA WEST&CO
 
-- **URL:** [https://www.westcompany.ro/cariere/#montator-pentru-lucr-ri-din-sticl](https://www.westcompany.ro/cariere/#montator-pentru-lucr-ri-din-sticl)
-- **Work Mode:** on-site
+- **URL:** [https://www.westcompany.ro/cariere/#construie-te-viitorul-la-west-co](https://www.westcompany.ro/cariere/#construie-te-viitorul-la-west-co)
 - **Location:** România
 - **Status:** scraped
 
-### Mecantizor
+### Inovaţie
 
-- **URL:** [https://www.westcompany.ro/cariere/#mecantizor](https://www.westcompany.ro/cariere/#mecantizor)
-- **Work Mode:** on-site
+- **URL:** [https://www.westcompany.ro/cariere/#inova-ie](https://www.westcompany.ro/cariere/#inova-ie)
 - **Location:** România
 - **Status:** scraped
 
-### Gestionar Depozit și Logistică
+### Măiestrie
 
-- **URL:** [https://www.westcompany.ro/cariere/#gestionar-depozit-i-logistic](https://www.westcompany.ro/cariere/#gestionar-depozit-i-logistic)
-- **Work Mode:** on-site
-- **Location:** Crișeni
-- **Status:** scraped
-
-### ŞOFER PROFESIONIST (C, E)
-
-- **URL:** [https://www.westcompany.ro/cariere/#ofer-profesionist-c-e](https://www.westcompany.ro/cariere/#ofer-profesionist-c-e)
-- **Work Mode:** on-site
-- **Location:** Crișeni
-- **Status:** scraped
-
-### Aplică pentru post
-
-- **URL:** [https://www.westcompany.ro/cariere/#aplic-pentru-post](https://www.westcompany.ro/cariere/#aplic-pentru-post)
+- **URL:** [https://www.westcompany.ro/cariere/#m-iestrie](https://www.westcompany.ro/cariere/#m-iestrie)
 - **Location:** România
 - **Status:** scraped
 
-### Succesul nostru depinde de oamenii talentați care aleg să facă parte din echipa noastră!
+### Sustenabilitate
 
-- **URL:** [https://www.westcompany.ro/cariere/#succesul-nostru-depinde-de-oamenii-talenta-i-care-aleg-s-fac-parte-din-echipa-noastr](https://www.westcompany.ro/cariere/#succesul-nostru-depinde-de-oamenii-talenta-i-care-aleg-s-fac-parte-din-echipa-noastr)
+- **URL:** [https://www.westcompany.ro/cariere/#sustenabilitate](https://www.westcompany.ro/cariere/#sustenabilitate)
 - **Location:** România
 - **Status:** scraped
 
-### Luați legătura cu noi
+### POSTURI DISPONIBILE
 
-- **URL:** [https://www.westcompany.ro/cariere/#lua-i-leg-tura-cu-noi](https://www.westcompany.ro/cariere/#lua-i-leg-tura-cu-noi)
+- **URL:** [https://www.westcompany.ro/cariere/#posturi-disponibile](https://www.westcompany.ro/cariere/#posturi-disponibile)
+- **Location:** România
+- **Status:** scraped
+
+### RĂMÂI LA CURENT
+
+- **URL:** [https://www.westcompany.ro/cariere/#r-m-i-la-curent](https://www.westcompany.ro/cariere/#r-m-i-la-curent)
 - **Location:** România
 - **Status:** scraped
