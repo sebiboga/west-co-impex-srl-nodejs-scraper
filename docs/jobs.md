@@ -10,11 +10,11 @@
 | Location | Sat Crişeni, Comuna Crişeni, Sălaj |
 | Website | [https://www.westcompany.ro](https://www.westcompany.ro) |
 | Careers | [https://www.westcompany.ro/cariere/](https://www.westcompany.ro/cariere/) |
-| Last Scraped | 2026-07-26 |
+| Last Scraped | 2026-07-27 |
 
 ## Current Job Listings (6)
 
-_Generated: 2026-07-26T08:07:14.526Z_
+_Generated: 2026-07-27T09:29:19.990Z_
 
 ### CONSTRUIEȘTE VIITORUL LA WEST&CO
 
