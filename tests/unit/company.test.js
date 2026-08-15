@@ -28,17 +28,10 @@ function clearAllCaches() {
   }
 }
 
-function mcpProfileResponse(profileData) {
+function anafCompanyResponse(data) {
   return {
     ok: true,
-    json: async () => ({
-      jsonrpc: '2.0',
-      id: '1',
-      result: {
-        content: [{ type: 'text', text: JSON.stringify(profileData) }],
-        isError: false
-      }
-    })
+    json: async () => ({ data, success: true })
   };
 }
 
@@ -49,52 +42,35 @@ function peviitorResponse(companies) {
   };
 }
 
-function solrResponse(numFound, docs) {
+function solrResponse(total, data) {
   return {
     ok: true,
-    json: async () => ({ response: { numFound, docs } })
+    json: async () => ({ total, data })
   };
 }
 
-const WEST_CO_PROFILE = {
-  cui: "4565806",
-  name: "WEST CO IMPEX SRL",
-  display_name: "WEST CO IMPEX SRL",
-  location: "Sat Crişeni, Comuna Crişeni, Sălaj",
-  status_label: "Activă",
-  is_active: true,
-  primary_caen_display: "2224 — Fabricarea articolelor din material plastic pentru construcții",
-  sections: [
-    {
-      key: "identificare_juridica",
-      fields: [
-        { label: "CUI/CIF", value: "4565806" },
-        { label: "Număr registru", value: "J1993000598312" },
-        { label: "Adresă", value: "Nr. 1, Cod poștal 4748" }
-      ]
-    },
-    {
-      key: "rezumat_fiscal",
-      fields: [
-        { label: "Status TVA", value: "Plătitor TVA" }
-      ]
-    }
-  ]
+const WEST_ANAF_RECORD = {
+  cui: 4565806,
+  name: 'WEST CO IMPEX SRL',
+  address: 'JUD. CLUJ, MUN. CLUJ-NAPOCA, STR. TĂIETURA TURCULUI, NR.24, ET.5, AP.503B',
+  caenCode: '6210',
+  inactive: false,
+  vatRegistered: true,
+  eFacturaRegistered: false,
+  headquartersAddress: { locality: 'Cluj-Napoca' }
 };
 
 describe('company.js', () => {
   let company;
 
   beforeAll(async () => {
-    process.env.SOLR_AUTH = 'test:test';
     fs.mkdirSync("tmp", { recursive: true });
     backupFile(COMPANY_JSON_PATH);
     backupFile(ROOT_COMPANY_JSON_PATH);
-    company = await import('../../company.js');
+    company = await import('../../scraper/company.js');
   });
 
   afterAll(() => {
-    delete process.env.SOLR_AUTH;
     restoreFile(COMPANY_JSON_PATH);
     restoreFile(ROOT_COMPANY_JSON_PATH);
   });
@@ -105,8 +81,8 @@ describe('company.js', () => {
   });
 
   describe('getCompanyData (no cache)', () => {
-    it('should fetch West Company via CIF lookup and return company data', async () => {
-      mockFetch.mockResolvedValueOnce(mcpProfileResponse(WEST_CO_PROFILE));
+    it('should fetch WEST CO IMPEX via direct CIF lookup and return company data', async () => {
+      mockFetch.mockResolvedValueOnce(anafCompanyResponse(WEST_ANAF_RECORD));
 
       const result = await company.getCompanyData();
 
@@ -117,24 +93,23 @@ describe('company.js', () => {
       expect(result.anafData.name).toBe('WEST CO IMPEX SRL');
     });
 
-    it('should throw when company data has no name', async () => {
-      const noNameProfile = { ...WEST_CO_PROFILE, name: null };
-      mockFetch.mockResolvedValueOnce(mcpProfileResponse(noNameProfile));
+    it('should throw when ANAF returns no data', async () => {
+      mockFetch.mockResolvedValueOnce(anafCompanyResponse(null));
 
-      await expect(company.getCompanyData()).rejects.toThrow('cuifirma.ro returned no company name');
+      await expect(company.getCompanyData()).rejects.toThrow('No data from ANAF');
+    });
+
+    it('should throw when ANAF returns no company name', async () => {
+      mockFetch.mockResolvedValueOnce(anafCompanyResponse({ cui: 4565806, name: null }));
+
+      await expect(company.getCompanyData()).rejects.toThrow('ANAF returned no company name');
     });
   });
 
   describe('getCompanyData (with cache)', () => {
     const cachedData = {
       validatedAt: new Date().toISOString(),
-      source: "cuifirma.ro",
-      anaf: {
-        name: 'WEST CO IMPEX SRL',
-        cui: '4565806',
-        address: 'Sat Crişeni, Comuna Crişeni, Sălaj',
-        inactive: false
-      },
+      anaf: WEST_ANAF_RECORD,
       summary: {
         company: 'WEST CO IMPEX SRL',
         cif: '4565806',
@@ -163,7 +138,7 @@ describe('company.js', () => {
 
     it('should return company data with status active', async () => {
       mockFetch
-        .mockResolvedValueOnce(mcpProfileResponse(WEST_CO_PROFILE))
+        .mockResolvedValueOnce(anafCompanyResponse(WEST_ANAF_RECORD))
         .mockResolvedValueOnce(solrResponse(5, [
           { url: 'https://test.com/1', title: 'Job 1' },
           { url: 'https://test.com/2', title: 'Job 2' }
@@ -178,5 +153,20 @@ describe('company.js', () => {
       expect(result).toHaveProperty('existingJobsCount');
       expect(typeof result.existingJobsCount).toBe('number');
     });
+
+    // WEST CO IMPEX e activă — testul inactive se rulează doar dacă firma e inactivă
+    if (WEST_ANAF_RECORD.inactive) {
+      it('should return inactive status when company is inactive', async () => {
+        const inactiveRecord = { ...WEST_ANAF_RECORD, inactive: true };
+
+        mockFetch
+          .mockResolvedValueOnce(anafCompanyResponse(inactiveRecord))
+          .mockResolvedValueOnce(solrResponse(0, []));
+
+        const result = await company.validateAndGetCompany();
+
+        expect(result).toHaveProperty('status', 'inactive');
+      });
+    }
   });
 });

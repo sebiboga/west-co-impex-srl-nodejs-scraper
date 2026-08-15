@@ -6,14 +6,12 @@ West Company scraper for peviitor.ro (Node.js, ESM, Jest)
 
 ## 🌱 This Repo Is a Derived Scraper
 
-This repo is a **derived scraper** created from a template for the peviitor.ro ecosystem.
+This repo is a **derived scraper** generated from the [EPAM Systems International SRL template](https://github.com/sebiboga/epam-systems-international-srl-nodejs-scraper) for the peviitor.ro ecosystem.
 
-**🤖 If you've been asked to CREATE or RECREATE a derived scraper, read [AI-DERIVATION-GUIDE.md](AI-DERIVATION-GUIDE.md) first.** That file is the consolidated playbook covering every step + all known pitfalls from past derivations.
+When making changes:
 
-When making changes to this template:
-
-- **All company-specific identity lives in `config/company.json`** (CIF, brand, legalName, URLs, API params). Read from `config/company.js` in Node code, or via `jq` in workflows. Never hardcode in source files.
-- **Only the API parsing logic in `index.js`** (`fetchJobsPage`, `parseJobs`) is site-specific. The output shape (`mapToJobModel`, `transformJobsForSOLR`) must stay uniform across derived scrapers.
+- **All company-specific identity lives in `scraper/config/company.json`** (id, company, brand, URLs, API params). Read from `scraper/config/company.js` in Node code, or via `jq` in workflows. Never hardcode in source files.
+- **Only the API parsing logic in `scraper/index.js`** (`fetchJobsPage`, `parsePageJobs`) is site-specific. The output shape (`mapToJobModel`, `transformJobsForSOLR`) must stay uniform across derived scrapers.
 - **If you add a new file, update [CONTRIBUTING.md](CONTRIBUTING.md)** — the derivation checklist must stay accurate.
 
 ## Critical Rules
@@ -51,9 +49,8 @@ NEVER use paths outside the project (e.g. `C:\Users\...\AppData\Local\Temp\openc
 
 ### 3. Environment Variables
 
-- `SOLR_AUTH` must be set in `.env.local` for SOLR tests (format: `user:password`)
-- `.env.local` is loaded automatically at runtime via `dotenv` (see `package.json`) — never commit it
-- Consistency tests also need `GITHUB_REPOSITORY` (format: `owner/repo`) and `GITHUB_TOKEN`
+- Consistency tests need `GITHUB_REPOSITORY` (format: `owner/repo`) and `GITHUB_TOKEN`
+- `.env.local` is NOT used — all operations go through the Peviitor API (no direct SOLR access)
 
 ### 4. Testing
 
@@ -64,10 +61,10 @@ npm test
 # Unit tests (no env vars needed)
 npm run test:unit
 
-# Integration tests (cuifirma.ro MCP API, SOLR conditional)
+# Integration tests (ANAF + Peviitor API)
 npm run test:integration
 
-# E2E tests (real careers page, SOLR conditional)
+# E2E tests (real careers page + ANOFM, ANAF/API conditional)
 npm run test:e2e
 
 # Consistency tests (GitHub repo config — needs GITHUB_REPOSITORY + GITHUB_TOKEN)
@@ -78,30 +75,29 @@ npm run test:consistency
 
 - Use `jest.unstable_mockModule` (NOT `jest.mock`) for mocking ESM modules
 - Run with `--experimental-vm-modules` flag
-- SOLR tests use conditional `itIfSolr` helper — auto-skip when `SOLR_AUTH` not set
 
 ### 6. Verification
 
 - După orice modificare, urmează [VERIFY.md](VERIFY.md) pas cu pas
-- Ultimul pas = rulează scraperul prin GitHub Actions, verifică job-urile în SOLR, și verifică că `docs/jobs.md` a fost generat și este accesibil pe GitHub Pages
+- Ultimul pas = rulează scraperul prin GitHub Actions, verifică job-urile în peviitor.ro, și verifică că `docs/jobs.md` a fost generat și este accesibil pe GitHub Pages
 - Toate workflow-urile din `.github/workflows/` trebuie să treacă înainte de merge
 
 ### 7. Module Structure
 
-- `config/company.json` + `config/company.js` — single source of truth for company identity
-- `src/anaf.js` — core cuifirma.ro MCP library (imported by company.js); retry logic: 3 retries, 2s delay
-- `src/markdown-generator.js` — generates `docs/jobs.md` after each scrape; called from index.js
-- `src/job-validator.js` — shared `validateByHead` + `validateByContent` used by both validator CLIs
-- `demoanaf.js` — CLI wrapper around src/anaf.js
-- `company.js` — company validation (cuifirma.ro + Peviitor + SOLR); root `company.json` is a 7-day cuifirma.ro cache committed to repo, with stale fallback
-- `solr.js` — SOLR operations
-- `validate-jobs.js` — manual deep validator (content-aware); thin wrapper over src/job-validator.js
-- `tests/validate-west-company-jobs.js` — CI fast validator (HEAD only); thin wrapper over src/job-validator.js + solr.js
-- `index.js` — main scraper orchestrator
+- `scraper/config/company.json` + `scraper/config/company.js` — single source of truth for company identity
+- `scraper/anaf.js` — ANAF API core module (imported by company.js); retry logic: 3 retries, 2s delay
+- `scraper/markdown-generator.js` — generates `docs/jobs.md` after each scrape; called from index.js
+- `scraper/job-validator.js` — shared `validateByHead` + `validateByContent` used by both validator CLIs
+- `scraper/demoanaf.js` — CLI wrapper around scraper/anaf.js
+- `scraper/company.js` — company validation (ANAF + Peviitor API); root `company.json` is a 7-day ANAF cache committed to repo, with stale fallback
+- `scraper/api.js` — Peviitor API operations (query, upsert, delete)
+- `scraper/validate-jobs.js` — manual deep validator (content-aware); thin wrapper over scraper/job-validator.js
+- `tests/validate-west-company-jobs.js` — CI fast validator (HEAD only); thin wrapper over scraper/job-validator.js + scraper/api.js
+- `scraper/index.js` — main scraper orchestrator
 
 ### 8. Caching Behavior
 
 - `tmp/company.json` — per-run scratch cache (gitignored)
 - `company.json` (root) — committed cache, refreshed every 7 days (configurable via `CACHE_MAX_AGE_DAYS` in company.js)
-- If cuifirma.ro is unreachable AND cache is stale, the code falls back to the stale cache rather than failing the scrape
+- If ANAF is unreachable AND cache is stale, the code falls back to the stale cache rather than failing the scrape
 - `docs/company.json` is regenerated on every scrape so GitHub Pages can read company identity

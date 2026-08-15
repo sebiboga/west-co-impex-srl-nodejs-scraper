@@ -7,14 +7,14 @@
 | CIF | 4565806 |
 | Brand | West Company |
 | Status | activ |
-| Location | Sat Crişeni, Comuna Crişeni, Sălaj |
+| Location | JUD. SĂLAJ, SAT CRIŞENI COM. CRIŞENI,  , NR.1 |
 | Website | [https://www.westcompany.ro](https://www.westcompany.ro) |
 | Careers | [https://www.westcompany.ro/cariere/](https://www.westcompany.ro/cariere/) |
 | Last Scraped | 2026-08-15 |
 
 ## Current Job Listings (6)
 
-_Generated: 2026-08-15T06:19:42.897Z_
+_Generated: 2026-08-15T06:25:54.973Z_
 
 ### CONSTRUIEȘTE VIITORUL LA WEST&CO
 

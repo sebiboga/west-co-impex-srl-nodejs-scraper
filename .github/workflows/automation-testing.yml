@@ -16,6 +16,40 @@ on:
         default: 'true'
 
 jobs:
+  create-autoheal-issue:
+    runs-on: ubuntu-latest
+    if: failure()
+    needs: [ensure-company-core, Automation-Tests, validate-jobs]
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@v5
+      - name: Create auto-heal issue
+        run: |
+          gh label create "auto-heal" --color "d73a4a" --description "Auto-heal issue for opencode" 2>/dev/null || true
+          BODY="Workflow [**${{ github.workflow }}**](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) failed.
+
+          ## Context
+          - **Repository:** ${{ github.repository }}
+          - **Run URL:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          - **Branch:** ${{ github.ref }}
+          - **Commit:** ${{ github.sha }}
+          - **Trigger:** ${{ github.event_name }}
+
+          ## Instructions for opencode
+          1. Clone the repo and check out this branch.
+          2. Investigate the run logs (linked above).
+          3. Fix whatever caused the failure.
+          4. Commit and push the fix.
+          5. Close this issue — the next push will re-trigger the workflow."
+
+          gh issue create \
+            --title "Auto-heal: ${{ github.repository }} workflow failed $(date -u +%Y-%m-%d)" \
+            --label "auto-heal" \
+            --body "$BODY"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   validate-jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
@@ -44,63 +78,25 @@ jobs:
             echo "Running in LIVE mode (will delete expired jobs)..."
             node --no-deprecation tests/validate-west-company-jobs.js --delete
           fi
-        env:
-          SOLR_AUTH: ${{ secrets.SOLR_AUTH }}
 
   ensure-company-core:
     runs-on: ubuntu-latest
 
-    outputs:
-      company_exists: ${{ steps.check.outputs.exists }}
     steps:
       - uses: actions/checkout@v5
 
-      - name: Check if company exists in company core
-        id: check
-        env:
-          SOLR_AUTH: ${{ secrets.SOLR_AUTH }}
+      - name: Ensure company exists in company core
         run: |
-          if [ -z "$SOLR_AUTH" ]; then
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-            exit 1
-          fi
-
-          CIF=$(jq -r '.cif' config/company.json)
-          BRAND=$(jq -r '.brand' config/company.json)
-
-          RESULT=$(curl -sS --user "${SOLR_AUTH}" \
-            "https://solr.peviitor.ro/solr/company/select?q=id:${CIF}&rows=1&wt=json" \
-            2>&1)
-
-          echo "Raw Solr response:"
-          echo "$RESULT" | head -c 500
-
-          FOUND=$(echo "$RESULT" | jq -r '.response.numFound // "0"' 2>/dev/null || echo "0")
-          echo ""
-          echo "${BRAND} count in company core: $FOUND"
-
-          if [ "$FOUND" -ge "1" ] 2>/dev/null; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Add company to company core
-        if: steps.check.outputs.exists == 'false'
-        env:
-          SOLR_AUTH: ${{ secrets.SOLR_AUTH }}
-        run: |
-          CIF=$(jq -r '.cif' config/company.json)
-          LEGAL_NAME=$(jq -r '.legalName' config/company.json)
-          BRAND=$(jq -r '.brand' config/company.json)
-          WEBSITE=$(jq -r '.website' config/company.json)
-          CAREER=$(jq -r '.careerUrl' config/company.json)
-          DEFAULT_LOC=$(jq -r '.defaultLocation' config/company.json)
-          SCRAPER_FILE=$(jq -r '.scraperFile' config/company.json)
+          CIF=$(jq -r '.id' scraper/config/company.json)
+          LEGAL_NAME=$(jq -r '.company' scraper/config/company.json)
+          BRAND=$(jq -r '.brand' scraper/config/company.json)
+          WEBSITE=$(jq -r '.website[0]' scraper/config/company.json)
+          CAREER=$(jq -r '.career[0]' scraper/config/company.json)
+          DEFAULT_LOC=$(jq -r '.location[0]' scraper/config/company.json)
+          SCRAPER_FILE=$(jq -r '.scraperFile' scraper/config/company.json)
           TODAY=$(date -u +%Y-%m-%d)
 
-          echo "Adding ${BRAND} to company core..."
-
+          echo "Upserting ${BRAND} (CIF: ${CIF}) via peviitor API..."
           jq -n \
             --arg id "$CIF" \
             --arg company "$LEGAL_NAME" \
@@ -110,38 +106,24 @@ jobs:
             --arg loc "$DEFAULT_LOC" \
             --arg today "$TODAY" \
             --arg scraperFile "$SCRAPER_FILE" \
-            '[{id:$id,company:$company,brand:$brand,status:"activ",location:[$loc],website:[$website],career:[$career],lastScraped:$today,scraperFile:$scraperFile}]' \
+            '{id:$id,company:$company,brand:$brand,status:"activ",location:[$loc],website:[$website],career:[$career],lastScraped:$today,scraperFile:$scraperFile}' \
             > company_data.json
 
-          curl -sS --user "${SOLR_AUTH}" \
-            "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
-            -X POST \
+          echo "Upserting ${BRAND} (CIF: ${CIF}) via peviitor API..."
+          curl -s -X PUT \
+            "https://api.peviitor.ro/v1/firme/company/add/" \
             -H "Content-Type: application/json" \
-            --data-binary @company_data.json \
-            2>&1 | head -c 500
-          echo ""
+            --data-binary @company_data.json
 
-      - name: Verify company exists after upsert
-        if: always()
-        env:
-          SOLR_AUTH: ${{ secrets.SOLR_AUTH }}
-        run: |
-          CIF=$(jq -r '.cif' config/company.json)
-          BRAND=$(jq -r '.brand' config/company.json)
+          FINAL=$(curl -s \
+            "https://api.peviitor.ro/v1/firme/company/?cif=${CIF}" | jq '.total')
 
-          RESULT=$(curl -sS --user "${SOLR_AUTH}" \
-            "https://solr.peviitor.ro/solr/company/select?q=id:${CIF}&rows=1&wt=json" \
-            2>&1)
+          echo "${BRAND} count after upsert: $FINAL"
 
-          FINAL=$(echo "$RESULT" | jq -r '.response.numFound // "0"' 2>/dev/null || echo "0")
-          echo "${BRAND} count after: $FINAL"
-
-          if [ "$FINAL" -ge "1" ] 2>/dev/null; then
-            echo "✅ SUCCESS: ${BRAND} is in company core"
+          if [ "$FINAL" -ge "1" ]; then
+            echo "SUCCESS: ${BRAND} is in company core"
           else
-            echo "❌ FAILED: ${BRAND} still not in company core"
-            echo "Raw response:"
-            echo "$RESULT" | head -c 500
+            echo "FAILED: ${BRAND} still not in company core"
             exit 1
           fi
 
@@ -171,8 +153,6 @@ jobs:
           npm run test:unit
           sed -i 's|<title>Test Report</title>|<title>Pre-scrape: Unit Tests — WEST CO IMPEX SRL</title>|;s|<h1 id="title">Test Report</h1>|<h1 id="title">Pre-scrape: Unit Tests — WEST CO IMPEX SRL</h1>|' test-report.html
           cp test-report.html docs/test-results/pre-scrape-unit.html || true
-        env:
-          SOLR_AUTH: ${{ secrets.SOLR_AUTH }}
           
       - name: Upload Unit Test Results
         uses: actions/upload-artifact@v7
@@ -186,8 +166,6 @@ jobs:
           npm run test:integration
           sed -i 's|<title>Test Report</title>|<title>Pre-scrape: Integration Tests — WEST CO IMPEX SRL</title>|;s|<h1 id="title">Test Report</h1>|<h1 id="title">Pre-scrape: Integration Tests — WEST CO IMPEX SRL</h1>|' test-report.html
           cp test-report.html docs/test-results/pre-scrape-integration.html || true
-        env:
-          SOLR_AUTH: ${{ secrets.SOLR_AUTH }}
           
       - name: Upload Integration Test Results
         uses: actions/upload-artifact@v7
@@ -201,8 +179,6 @@ jobs:
           npm run test:e2e
           sed -i 's|<title>Test Report</title>|<title>Post-scrape: E2E Tests — WEST CO IMPEX SRL</title>|;s|<h1 id="title">Test Report</h1>|<h1 id="title">Post-scrape: E2E Tests — WEST CO IMPEX SRL</h1>|' test-report.html
           cp test-report.html docs/test-results/post-scrape.html || true
-        env:
-          SOLR_AUTH: ${{ secrets.SOLR_AUTH }}
           
       - name: Upload E2E Test Results
         uses: actions/upload-artifact@v7
@@ -219,7 +195,6 @@ jobs:
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SOLR_AUTH: ${{ secrets.SOLR_AUTH }}
 
       - name: Upload Consistency Test Results
         uses: actions/upload-artifact@v7

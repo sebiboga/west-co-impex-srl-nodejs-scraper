@@ -1,0 +1,5 @@
+{
+  "apiBase": "https://www.westcompany.ro",
+  "apiListPath": "/cariere/",
+  "defaultLocation": "Crișeni, Sălaj"
+}

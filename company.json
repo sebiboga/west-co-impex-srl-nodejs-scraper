@@ -1,0 +1,67 @@
+{
+  "validatedAt": "2026-08-15T06:25:51.570Z",
+  "source": "ANAF",
+  "brand": "West Company",
+  "anaf": {
+    "cui": 4565806,
+    "name": "WEST CO IMPEX SRL",
+    "address": "JUD. SĂLAJ, SAT CRIŞENI COM. CRIŞENI,  , NR.1",
+    "registrationNumber": "J1993000598312",
+    "phone": "260618714",
+    "fax": "",
+    "postalCode": "457105",
+    "caenCode": "2224",
+    "iban": "",
+    "registrationState": "INREGISTRAT din data 26.08.1993",
+    "registrationDate": "1993-08-26",
+    "fiscalAuthority": "Administraţia Fiscală pentru Contribuabili Mijlocii - Sălaj",
+    "ownershipForm": "PROPR.PRIVATA-CAPITAL PRIVAT AUTOHTON",
+    "organizationForm": "PERSOANA JURIDICA",
+    "legalForm": "SOCIETATE COMERCIALĂ CU RĂSPUNDERE LIMITATĂ",
+    "vatRegistered": true,
+    "vatPeriods": [
+      {
+        "start": "1993-07-01",
+        "end": null,
+        "yearStart": "",
+        "message": ""
+      }
+    ],
+    "cashBasisVat": false,
+    "cashBasisVatStart": null,
+    "cashBasisVatEnd": null,
+    "inactive": false,
+    "inactiveSince": null,
+    "reactivatedSince": null,
+    "splitVat": false,
+    "eFacturaRegistered": false,
+    "headquartersAddress": {
+      "street": " ",
+      "number": "1",
+      "locality": "Sat Crişeni Com. Crişeni",
+      "county": "SĂLAJ",
+      "country": "",
+      "postalCode": "457105"
+    },
+    "fiscalAddress": {
+      "street": "",
+      "number": "",
+      "locality": "",
+      "county": "",
+      "country": "",
+      "postalCode": ""
+    },
+    "administrators": [],
+    "authorizedCaenCodes": [],
+    "onrcStatus": 0,
+    "onrcStatusLabel": "Funcțiune"
+  },
+  "peviitor": null,
+  "summary": {
+    "company": "WEST CO IMPEX SRL",
+    "cif": "4565806",
+    "active": true,
+    "inactiveSince": null,
+    "address": "JUD. SĂLAJ, SAT CRIŞENI COM. CRIŞENI,  , NR.1"
+  }
+}

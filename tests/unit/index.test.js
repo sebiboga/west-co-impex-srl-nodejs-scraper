@@ -4,7 +4,7 @@ describe('index.js Component Tests', () => {
   let index;
 
   beforeAll(async () => {
-    index = await import('../../index.js');
+    index = await import('../../scraper/index.js');
   });
 
   describe('transformJobsForSOLR', () => {
@@ -67,10 +67,10 @@ describe('index.js Component Tests', () => {
     });
   });
 
-  describe('parseJobs', () => {
+  describe('parsePageJobs', () => {
     it('should extract job titles from h2/h3 elements', () => {
       const html = '<html><body><h2>Sofer Categoria C+E</h2><h3>Manager Depozit</h3></body></html>';
-      const result = index.parseJobs(html);
+      const result = index.parsePageJobs(html);
       expect(result.jobs.length).toBe(2);
       expect(result.jobs[0].title).toBe('Sofer Categoria C+E');
       expect(result.jobs[1].title).toBe('Manager Depozit');
@@ -78,53 +78,53 @@ describe('index.js Component Tests', () => {
 
     it('should skip titles shorter than 3 characters', () => {
       const html = '<html><body><h2>AB</h2><h2>Valid Job</h2></body></html>';
-      const result = index.parseJobs(html);
+      const result = index.parsePageJobs(html);
       expect(result.jobs.length).toBe(1);
       expect(result.jobs[0].title).toBe('Valid Job');
     });
 
     it('should deduplicate job titles', () => {
       const html = '<html><body><h2>Sofer Categoria C+E</h2><h2>Sofer Categoria C+E</h2></body></html>';
-      const result = index.parseJobs(html);
+      const result = index.parsePageJobs(html);
       expect(result.jobs.length).toBe(1);
     });
 
     it('should detect Crișeni/Sălaj/Zalău location from context', () => {
       const html = '<html><body><section><h2>Sofer</h2><p>Location: Zalău</p></section></body></html>';
-      const result = index.parseJobs(html);
+      const result = index.parsePageJobs(html);
       expect(result.jobs.length).toBe(1);
       expect(result.jobs[0].location).toEqual(['Zalău']);
     });
 
     it('should default to Crișeni, Sălaj when Crișeni mentioned in section', () => {
       const html = '<html><body><section><h2>Lucrator Depozit</h2><p>Job in Crișeni, Salaj</p></section></body></html>';
-      const result = index.parseJobs(html);
+      const result = index.parsePageJobs(html);
       expect(result.jobs.length).toBe(1);
       expect(result.jobs[0].location).toEqual(['Crișeni, Sălaj']);
     });
 
     it('should set workmode on-site for Full Time jobs', () => {
       const html = '<html><body><section><h2>Sofer</h2><p>Full Time</p></section></body></html>';
-      const result = index.parseJobs(html);
+      const result = index.parsePageJobs(html);
       expect(result.jobs[0].workmode).toBe('on-site');
     });
 
     it('should generate job URL from title', () => {
       const html = '<html><body><h2>Sofer Categoria C+E</h2></body></html>';
-      const result = index.parseJobs(html);
+      const result = index.parsePageJobs(html);
       expect(result.jobs[0].url).toBe('https://www.westcompany.ro/cariere/#sofer-categoria-c-e');
     });
 
     it('should return empty array for no job content', () => {
       const html = '<html><body><p>No jobs here</p></body></html>';
-      const result = index.parseJobs(html);
+      const result = index.parsePageJobs(html);
       expect(result.jobs).toEqual([]);
       expect(result.total).toBe(0);
     });
 
     it('should return total count matching jobs length', () => {
       const html = '<html><body><h2>Job A</h2><h2>Job B</h2><h2>Job C</h2></body></html>';
-      const result = index.parseJobs(html);
+      const result = index.parsePageJobs(html);
       expect(result.total).toBe(3);
       expect(result.total).toBe(result.jobs.length);
     });
