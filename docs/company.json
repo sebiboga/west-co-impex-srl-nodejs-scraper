@@ -6,5 +6,5 @@
   "location": ["Crișeni, Sălaj"],
   "website": ["https://www.westcompany.ro"],
   "career": ["https://www.westcompany.ro/cariere/"],
-  "scraperFile": "https://github.com/sebiboga/west-co-impex-srl-nodejs-scraper/actions/workflows/job-seeker-ro-spider.yml"
+  "scraperFile": "https://github.com/peviitor-scrapers/west-co-impex-srl-nodejs-scraper/actions/workflows/job-seeker-ro-spider.yml"
 }
